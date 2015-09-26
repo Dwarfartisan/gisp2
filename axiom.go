@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Axiom 是基本的 LISP 公理实现，尽可能贴近原始的 LISP 公理描述，但是部分实现对实际的 golang
@@ -17,18 +17,18 @@ var Axiom = Toolkit{
 	Content: map[string]interface{}{
 		"quote": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, fmt.Errorf("Quote Args Error: except only one arg but %v", args)
+				return nil, fmt.Errorf("Quote Args Error: expect only one arg but %v", args)
 			}
 			return Q(Q(args[0])), nil
 		}),
 		"var": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
-			st := px.NewStateInMemory(args)
-			_, err := px.Binds_(TypeAs(ATOM), px.Either(px.Try(px.Eof),
-				px.Bind_(px.AnyOne, px.Eof)))(st)
+			st := p.NewBasicState(args)
+			_, err := TypeAs(ATOM).Then(p.Choice(p.Try(p.EOF), p.M(p.One).Then(p.EOF)))(&st)
 			if err != nil {
 				return nil, err
 			}
 			first := args[0].(Atom)
+
 			slot := VarSlot(first.Type)
 			if len(args) == 1 {
 				err := env.Defvar(first.Name, slot)
@@ -40,9 +40,8 @@ var Axiom = Toolkit{
 			return Q(val), err
 		}),
 		"set": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
-			st := px.NewStateInMemory(args)
-			_, err := px.Binds_(px.Either(px.Try(TypeAs(ATOM)),
-				TypeAs(QUOTE)), px.AnyOne, px.Eof)(st)
+			st := p.NewBasicState(args)
+			_, err := p.Choice(p.Try(TypeAs(ATOM)), TypeAs(QUOTE)).Then(p.One).Then(p.EOF)(&st)
 			if err != nil {
 				return nil, err
 			}
@@ -100,13 +99,13 @@ var Axiom = Toolkit{
 			if lisp, ok := args[0].(List); ok {
 				return Q(lisp[0]).Eval, nil
 			}
-			return nil, ParsexSignErrorf("car args error: excpet a list but %v", args)
+			return nil, fmt.Errorf("car args error: excpet a list but %v", args)
 		}),
 		"cdr": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 			if lisp, ok := args[0].(List); ok {
 				return Q(lisp[1:]).Eval, nil
 			}
-			return nil, ParsexSignErrorf("car args error: excpet a list but %v", args)
+			return nil, fmt.Errorf("car args error: excpet a list but %v", args)
 		}),
 		// atom while true both lisp atom or go value
 		"atom": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {

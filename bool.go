@@ -3,28 +3,28 @@ package gisp
 import (
 	"fmt"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Bool 是内置的 bool 类型的封装
 type Bool bool
 
 // BoolParser 解析 bool
-var BoolParser = p.Bind(p.Choice(p.String("true"), p.String("false")), func(input interface{}) p.Parser {
-	return func(st p.ParseState) (interface{}, error) {
+var BoolParser = p.Choice(p.Str("true"), p.Str("false")).Bind(func(input interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		switch input.(string) {
 		case "true":
 			return Bool(true), nil
 		case "false":
 			return Bool(false), nil
 		default:
-			return nil, fmt.Errorf("Unexcept bool token %v", input)
+			return nil, fmt.Errorf("Unexpect bool token %v", input)
 		}
 	}
 })
 
 // NilParser 解析 nil
-var NilParser = p.Bind_(p.String("nil"), p.Return(nil))
+var NilParser = p.Str("nil").Then(p.Return(nil))
 
 // Nil 类型定义空值行为
 type Nil struct {

@@ -44,7 +44,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 			"ginq": map[string]interface{}{
 				"select": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq select args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq select args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -54,7 +54,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"where": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq where args error: excpet one bool expression but: %v", args)
+						return nil, fmt.Errorf("ginq where args error: excpet one bool expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -68,7 +68,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 						return nil, err
 					}
 					if len(params) != 2 {
-						return nil, ParsexSignErrorf("ginq where args error: excpet one bool expression but: %v", params)
+						return nil, fmt.Errorf("ginq where args error: excpet one bool expression but: %v", params)
 					}
 					return Q(NewGinGroup(params[0], params[1])), nil
 				}),
@@ -82,14 +82,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				"count": GinCount{},
 				"sum": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq sum args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq sum args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq sum args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq sum args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						if len(l) == 0 {
@@ -113,14 +113,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"max": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq max args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq max args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq max args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq max args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						if len(l) == 0 {
@@ -142,7 +142,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 									root = item
 								}
 							} else {
-								return nil, fmt.Errorf("ginq max error: except compare %v and %v got a bool but: %v",
+								return nil, fmt.Errorf("ginq max error: expect compare %v and %v got a bool but: %v",
 									root, item, data)
 							}
 						}
@@ -151,14 +151,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"min": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq min args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq min args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq min args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq min args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						if len(l) == 0 {
@@ -180,7 +180,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 									root = item
 								}
 							} else {
-								return nil, fmt.Errorf("ginq min error: except compare %v and %v got a bool but: %v",
+								return nil, fmt.Errorf("ginq min error: expect compare %v and %v got a bool but: %v",
 									root, item, data)
 							}
 						}
@@ -189,14 +189,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"avg": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq avg args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq avg args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq avg args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq avg args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						if len(l) == 0 {
@@ -226,14 +226,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"reverse": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq reverse args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq reverse args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq reverse args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq reverse args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						ln := len(l)
@@ -247,7 +247,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"sums": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq sum select args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq sum select args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -257,7 +257,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"avgs": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq avg select args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq avg select args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -267,7 +267,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"mins": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq min select args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq min select args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -277,7 +277,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"maxs": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq max select args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq max select args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -287,14 +287,14 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"sort": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq sort args error: excpet one data list but: %v", args)
+						return nil, fmt.Errorf("ginq sort args error: excpet one data list but: %v", args)
 					}
 
 					param := args[0]
 					var l List
 					var ok bool
 					if l, ok = param.(List); !ok {
-						return nil, ParsexSignErrorf("ginq sort args error: except a data List but: %v", param)
+						return nil, fmt.Errorf("ginq sort args error: expect a data List but: %v", param)
 					}
 					return func(env Env) (interface{}, error) {
 						buf := make(List, len(l))
@@ -309,7 +309,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 				}),
 				"sortby": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 					if len(args) != 1 {
-						return nil, ParsexSignErrorf("ginq sort by args error: excpet one expression but: %v", args)
+						return nil, fmt.Errorf("ginq sort by args error: excpet one expression but: %v", args)
 					}
 					param, err := Eval(env, args[0])
 					if err != nil {
@@ -327,7 +327,7 @@ func NewGinq(queries ...interface{}) *Ginq {
 // Task 定了 ginq 包的求值行为，它给出 ginq 包中指定名称的对象
 func (ginq Ginq) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq avg args error: excpet one expression but: %v", args)
+		return nil, fmt.Errorf("ginq avg args error: excpet one expression but: %v", args)
 	}
 	data, err := Eval(env, args[0])
 	if err != nil {
@@ -336,7 +336,7 @@ func (ginq Ginq) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = data.(List); !ok {
-		return nil, ParsexSignErrorf("ginq run error: excpet arg eval got a list but %v", data)
+		return nil, fmt.Errorf("ginq run error: excpet arg eval got a list but %v", data)
 	}
 	meta := map[string]interface{}{}
 	for k, v := range ginq.Meta {
@@ -447,12 +447,12 @@ func NewGinGroup(by interface{}, group interface{}) GinGroup {
 // Task 实现 GinGroup 的求值行为
 func (group GinGroup) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq group by exec error: except group from a list but %v", args)
+		return nil, fmt.Errorf("ginq group by exec error: expect group from a list but %v", args)
 	}
 	var l List
 	var ok bool
 	if l, ok = args[0].(List); !ok {
-		return nil, ParsexSignErrorf("ginq group by exec error: except group from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq group by exec error: expect group from a list but %v", args[0])
 	}
 	pool := []List{}
 	for _, data := range l {
@@ -503,12 +503,12 @@ func NewGinSelect(fun interface{}) GinSelect {
 // Task 实现 Ginq Select 求值
 func (sel GinSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq select args error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq select args error: expect select from a list but %v", args)
 	}
 	var l List
 	var ok bool
 	if l, ok = args[0].(List); !ok {
-		return nil, ParsexSignErrorf("ginq select args error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq select args error: expect select from a list but %v", args[0])
 	}
 	return Selector{sel.fun, l}, nil
 }
@@ -526,12 +526,12 @@ func NewGinWere(expr interface{}) GinWhere {
 // Task 实现了 GinWhere 的求值行为
 func (where GinWhere) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq where args error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq where args error: expect select from a list but %v", args)
 	}
 	var l List
 	var ok bool
 	if l, ok = args[0].(List); !ok {
-		return nil, ParsexSignErrorf("ginq where args error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq where args error: expect select from a list but %v", args[0])
 	}
 	rel := List{}
 	for _, r := range l {
@@ -545,7 +545,7 @@ func (where GinWhere) Task(env Env, args ...interface{}) (Lisp, error) {
 				rel = append(rel, r)
 			}
 		} else {
-			return nil, ParsexSignErrorf("ginq where exec error: except (%v %v) got a bool but %v",
+			return nil, fmt.Errorf("ginq where exec error: expect (%v %v) got a bool but %v",
 				where.expr, r, b)
 		}
 	}
@@ -565,7 +565,7 @@ func NewGinFields(args ...interface{}) GinFields {
 // Task 实现字段提取操作的求值行为
 func (fs GinFields) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq fields args error: except fields from a list but %v", args)
+		return nil, fmt.Errorf("ginq fields args error: expect fields from a list but %v", args)
 	}
 	row := make(List, len(fs.funs))
 	for i, fun := range fs.funs {
@@ -612,7 +612,7 @@ func NewGinSumSelect(fun interface{}) GinSumSelect {
 // Task 实现 GinSumSelect 的求值行为
 func (sel GinSumSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq sum select data error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq sum select data error: expect select from a list but %v", args)
 	}
 	param, err := Eval(env, args[0])
 	if err != nil {
@@ -621,7 +621,7 @@ func (sel GinSumSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq sum select data error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq sum select data error: expect select from a list but %v", args[0])
 	}
 	return GinSumSelector{Selector{sel.fun, l}}, nil
 }
@@ -670,7 +670,7 @@ func NewGinMaxSelect(fun interface{}) GinMaxSelect {
 // Task 实现 GinMaxSelect 的求值行为
 func (sel GinMaxSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq max select data error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq max select data error: expect select from a list but %v", args)
 	}
 	param, err := Eval(env, args[0])
 	if err != nil {
@@ -679,7 +679,7 @@ func (sel GinMaxSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq max select data error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq max select data error: expect select from a list but %v", args[0])
 	}
 	return GinMaxSelector{Selector{sel.fun, l}}, nil
 }
@@ -715,7 +715,7 @@ func (ms GinMaxSelector) Eval(env Env) (interface{}, error) {
 				root = item
 			}
 		} else {
-			return nil, fmt.Errorf("ginq max error: except compare %v and %v got a bool but: %v",
+			return nil, fmt.Errorf("ginq max error: expect compare %v and %v got a bool but: %v",
 				root, item, data)
 		}
 	}
@@ -735,7 +735,7 @@ func NewGinMinSelect(fun interface{}) GinMinSelect {
 // Task 实现 ginq min 的求值逻辑
 func (sel GinMinSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq min select data error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq min select data error: expect select from a list but %v", args)
 	}
 	param, err := Eval(env, args[0])
 	if err != nil {
@@ -744,7 +744,7 @@ func (sel GinMinSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq min select data error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq min select data error: expect select from a list but %v", args[0])
 	}
 	return GinMinSelector{Selector{sel.fun, l}}, nil
 }
@@ -780,7 +780,7 @@ func (ms GinMinSelector) Eval(env Env) (interface{}, error) {
 				root = item
 			}
 		} else {
-			return nil, fmt.Errorf("ginq max error: except compare %v and %v got a bool but: %v",
+			return nil, fmt.Errorf("ginq max error: expect compare %v and %v got a bool but: %v",
 				root, item, data)
 		}
 	}
@@ -800,7 +800,7 @@ func NewGinAvgSelect(fun interface{}) GinAvgSelect {
 // Task 实现 ginq avg select 的求值
 func (sel GinAvgSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq avg select data error: except select from a list but %v", args)
+		return nil, fmt.Errorf("ginq avg select data error: expect select from a list but %v", args)
 	}
 	param, err := Eval(env, args[0])
 	if err != nil {
@@ -809,7 +809,7 @@ func (sel GinAvgSelect) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq avg select data error: except select from a list but %v", args[0])
+		return nil, fmt.Errorf("ginq avg select data error: expect select from a list but %v", args[0])
 	}
 	return GinAvgSelector{Selector{sel.fun, l}}, nil
 }
@@ -858,7 +858,7 @@ type GinCount struct {
 // Task 实现 GinCount 的求值逻辑
 func (c GinCount) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq count data error: except a list but %v", args)
+		return nil, fmt.Errorf("ginq count data error: expect a list but %v", args)
 	}
 	param, err := Eval(env, args[0])
 	if err != nil {
@@ -867,7 +867,7 @@ func (c GinCount) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq count data error: except count a list but %v", args[0])
+		return nil, fmt.Errorf("ginq count data error: expect count a list but %v", args[0])
 	}
 	return Q(len(l)), nil
 }
@@ -891,7 +891,7 @@ func (ls *GinSort) Less(x, y int) bool {
 	if is, ok := b.(bool); ok {
 		return is
 	}
-	//ls.err = fmt.Errorf("except (less x y) as (< %v %v) return true or false but error: %v", err)
+	//ls.err = fmt.Errorf("expect (less x y) as (< %v %v) return true or false but error: %v", err)
 	ls.err = err
 	return false
 }
@@ -921,7 +921,7 @@ func NewGinSortBy(fun interface{}) GinSortBy {
 // Task 实现 sort by 的求值
 func (gsb GinSortBy) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("ginq sort data error: except sort one list but %v", args)
+		return nil, fmt.Errorf("ginq sort data error: expect sort one list but %v", args)
 	}
 	// param, err := Eval(env, args[0])
 	// if err != nil {
@@ -931,7 +931,7 @@ func (gsb GinSortBy) Task(env Env, args ...interface{}) (Lisp, error) {
 	var l List
 	var ok bool
 	if l, ok = param.(List); !ok {
-		return nil, ParsexSignErrorf("ginq sort data error: except sort a list but %v", args[0])
+		return nil, fmt.Errorf("ginq sort data error: expect sort a list but %v", args[0])
 	}
 	buf := make(List, len(l))
 	copy(buf, l)
@@ -957,7 +957,7 @@ func (gsl *GinSortListBy) Less(x, y int) bool {
 	if is, ok := b.(bool); ok {
 		return is
 	}
-	//ls.err = fmt.Errorf("except (less x y) as (< %v %v) return true or false but error: %v", err)
+	//ls.err = fmt.Errorf("expect (less x y) as (< %v %v) return true or false but error: %v", err)
 	gsl.err = err
 	return false
 }

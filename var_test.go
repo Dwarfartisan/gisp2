@@ -20,7 +20,7 @@ func TestOptionGetNil(t *testing.T) {
 	var slot = DefOption(INT)
 	val := slot.Get()
 	if val != nil {
-		t.Fatalf("except nil but %v", val)
+		t.Fatalf("expect nil but %v", val)
 	}
 }
 
@@ -28,7 +28,7 @@ func TestOptionGetNilType(t *testing.T) {
 	var slot = DefOption(INT)
 	typ := slot.Type()
 	if typ != INT {
-		t.Fatalf("except INT type but %v", typ)
+		t.Fatalf("expect INT type but %v", typ)
 	}
 }
 func TestOptionSetValid(t *testing.T) {
@@ -61,7 +61,7 @@ func TestStrictGetNil(t *testing.T) {
 	var slot = DefStrict(INT)
 	val := slot.Get()
 	if val == nil {
-		t.Fatal("except zero value when init but nil")
+		t.Fatal("expect zero value when init but nil")
 	}
 }
 
@@ -69,7 +69,7 @@ func TestStrictGetNilType(t *testing.T) {
 	var slot = DefStrict(INT)
 	typ := slot.Type()
 	if typ != INT {
-		t.Fatalf("except INT type but %v", typ)
+		t.Fatalf("expect INT type but %v", typ)
 	}
 }
 

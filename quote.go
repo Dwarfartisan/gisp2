@@ -6,8 +6,8 @@ type Quote struct {
 }
 
 // Eval 实现了 Eval 行为
-func (this Quote) Eval(env Env) (interface{}, error) {
-	return this.Lisp, nil
+func (quote Quote) Eval(env Env) (interface{}, error) {
+	return quote.Lisp, nil
 }
 
 // Q 得到一个 Quote

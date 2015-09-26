@@ -118,10 +118,10 @@ func TestLessOrEqualList(t *testing.T) {
 	}
 	ret, err = gisp.Parse("(<= y z)")
 	if err != nil {
-		t.Fatalf("excpet not %v <= %v but error: %v", y, z, err)
+		t.Fatalf("excpet %v <= %v but error: %v", y, z, err)
 	}
 	if !ret.(bool) {
-		t.Fatalf("excpet not %v <= %v", y, z)
+		t.Fatalf("excpet %v <= %v but false", y, z)
 	}
 }
 

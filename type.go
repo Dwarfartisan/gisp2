@@ -3,7 +3,7 @@ package gisp
 import (
 	"reflect"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 //Type 对象定义了一个可空的反射类型，用于 Lisp 对象定义
@@ -25,14 +25,14 @@ func (typ Type) Option() bool {
 	return typ.option
 }
 
-func stop(st p.ParseState) (interface{}, error) {
+func stop(st p.State) (interface{}, error) {
 	pos := st.Pos()
 	defer st.SeekTo(pos)
 	r, err := p.Choice(
 		p.Try(p.Space),
-		p.Try(p.NewLine),
-		p.Try(p.OneOf(":.()[]{}?")),
-		p.Try(p.Eof),
+		p.Try(p.Newline),
+		p.Try(p.RuneOf(":.()[]{}?")),
+		p.Try(p.EOF),
 	)(st)
 	if err != nil {
 		return nil, err
@@ -40,20 +40,20 @@ func stop(st p.ParseState) (interface{}, error) {
 	return r, nil
 }
 
-func stopWord(x interface{}) p.Parser {
-	return p.Bind_(stop, p.Return(x))
+func stopWord(x interface{}) p.Parsec {
+	return p.M(stop).Then(p.Return(x))
 }
 
-func typeName(word string) p.Parser {
-	return p.Bind(p.String(word), stopWord)
+func typeName(word string) p.Parsec {
+	return p.Str(word).Bind(stopWord)
 }
 
-var anyType = p.Bind(p.Bind(p.Many1(p.Either(p.Try(p.Digit), p.Letter)), stopWord), p.ReturnString)
+var anyType = p.Many1(p.Choice(p.Try(p.Digit), p.Letter)).Bind(stopWord).Bind(p.ReturnString)
 
 // SliceTypeParserExt 定义了带环境的序列类型解析逻辑
-func SliceTypeParserExt(env Env) p.Parser {
-	return func(st p.ParseState) (interface{}, error) {
-		t, err := p.Bind_(p.String("[]"), ExtTypeParser(env))(st)
+func SliceTypeParserExt(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		t, err := p.Str("[]").Then(ExtTypeParser(env))(st)
 		if err != nil {
 			return nil, err
 		}
@@ -62,9 +62,9 @@ func SliceTypeParserExt(env Env) p.Parser {
 }
 
 // MapTypeParserExt  定义了带环境的映射类型解析逻辑
-func MapTypeParserExt(env Env) p.Parser {
-	return func(st p.ParseState) (interface{}, error) {
-		key, err := p.Between(p.String("map["), p.Rune(']'), ExtTypeParser(env))(st)
+func MapTypeParserExt(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		key, err := p.Between(p.Str("map["), p.Chr(']'), ExtTypeParser(env))(st)
 		if err != nil {
 			return nil, err
 		}
@@ -77,8 +77,8 @@ func MapTypeParserExt(env Env) p.Parser {
 }
 
 // MapTypeParser 定义了序列类型解析逻辑
-func MapTypeParser(st p.ParseState) (interface{}, error) {
-	key, err := p.Between(p.String("map["), p.Rune(']'), TypeParser)(st)
+func MapTypeParser(st p.State) (interface{}, error) {
+	key, err := p.Between(p.Str("map["), p.Chr(']'), TypeParser)(st)
 	if err != nil {
 		return nil, err
 	}
@@ -90,27 +90,27 @@ func MapTypeParser(st p.ParseState) (interface{}, error) {
 }
 
 // ExtTypeParser 定义了带环境的类型解释器
-func ExtTypeParser(env Env) p.Parser {
-	return func(st p.ParseState) (interface{}, error) {
-		_, err := p.String("::")(st)
+func ExtTypeParser(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		_, err := p.Str("::")(st)
 		if err != nil {
 			return nil, err
 		}
 		buildin := p.Choice(
-			p.Try(p.Bind_(typeName("bool"), p.Return(BOOL))),
-			p.Try(p.Bind_(typeName("float"), p.Return(FLOAT))),
-			p.Try(p.Bind_(typeName("int"), p.Return(INT))),
-			p.Try(p.Bind_(typeName("string"), p.Return(STRING))),
-			p.Try(p.Bind_(typeName("time"), p.Return(TIME))),
-			p.Try(p.Bind_(typeName("duration"), p.Return(DURATION))),
-			p.Try(p.Bind_(typeName("any"), p.Return(ANY))),
-			p.Try(p.Bind_(typeName("atom"), p.Return(ATOM))),
-			p.Try(p.Bind_(p.String("list"), p.Return(LIST))),
-			p.Try(p.Bind_(typeName("quote"), p.Return(QUOTE))),
-			p.Try(p.Bind_(p.String("dict"), p.Return(DICT))),
+			p.Try(typeName("bool").Then(p.Return(BOOL))),
+			p.Try(typeName("float").Then(p.Return(FLOAT))),
+			p.Try(typeName("int").Then(p.Return(INT))),
+			p.Try(typeName("string").Then(p.Return(STRING))),
+			p.Try(typeName("time").Then(p.Return(TIME))),
+			p.Try(typeName("duration").Then(p.Return(DURATION))),
+			p.Try(typeName("any").Then(p.Return(ANY))),
+			p.Try(typeName("atom").Then(p.Return(ATOM))),
+			p.Try(p.Str("list").Then(p.Return(LIST))),
+			p.Try(typeName("quote").Then(p.Return(QUOTE))),
+			p.Try(p.Str("dict").Then(p.Return(DICT))),
 			p.Try(MapTypeParserExt(env)),
 		)
-		ext := func(st p.ParseState) (interface{}, error) {
+		ext := func(st p.State) (interface{}, error) {
 			n, err := anyType(st)
 			if err != nil {
 				return nil, err
@@ -124,37 +124,37 @@ func ExtTypeParser(env Env) p.Parser {
 			}
 			return nil, st.Trap("var %v is't a type. It is %v", n, reflect.TypeOf(t))
 		}
-		t, err := p.Either(buildin, ext)(st)
+		t, err := p.Choice(buildin, ext)(st)
 		if err != nil {
 			return nil, err
 		}
-		_, err = p.Try(p.Rune('?'))(st)
+		_, err = p.Try(p.Chr('?'))(st)
 		option := err == nil
 		return Type{t.(reflect.Type), option}, nil
 	}
 }
 
 // TypeParser 定义了一个基本的类型解释器
-func TypeParser(st p.ParseState) (interface{}, error) {
-	t, err := p.Bind_(p.String("::"),
+func TypeParser(st p.State) (interface{}, error) {
+	t, err := p.Str("::").Then(
 		p.Choice(
-			p.Try(p.Bind_(p.String("bool"), p.Return(BOOL))),
-			p.Try(p.Bind_(p.String("float"), p.Return(FLOAT))),
-			p.Try(p.Bind_(p.String("int"), p.Return(INT))),
-			p.Try(p.Bind_(p.String("string"), p.Return(STRING))),
-			p.Try(p.Bind_(p.String("time"), p.Return(TIME))),
-			p.Try(p.Bind_(p.String("duration"), p.Return(DURATION))),
-			p.Try(p.Bind_(p.String("any"), p.Return(ANY))),
-			p.Try(p.Bind_(p.String("atom"), p.Return(ATOM))),
-			p.Try(p.Bind_(p.String("list"), p.Return(LIST))),
-			p.Try(p.Bind_(p.String("quote"), p.Return(QUOTE))),
-			p.Try(p.Bind_(p.String("dict"), p.Return(DICT))),
+			p.Try(p.Str("bool").Then(p.Return(BOOL))),
+			p.Try(p.Str("float").Then(p.Return(FLOAT))),
+			p.Try(p.Str("int").Then(p.Return(INT))),
+			p.Try(p.Str("string").Then(p.Return(STRING))),
+			p.Try(p.Str("time").Then(p.Return(TIME))),
+			p.Try(p.Str("duration").Then(p.Return(DURATION))),
+			p.Try(p.Str("any").Then(p.Return(ANY))),
+			p.Try(p.Str("atom").Then(p.Return(ATOM))),
+			p.Try(p.Str("list").Then(p.Return(LIST))),
+			p.Try(p.Str("quote").Then(p.Return(QUOTE))),
+			p.Try(p.Str("dict").Then(p.Return(DICT))),
 			MapTypeParser,
 		))(st)
 	if err != nil {
 		return nil, err
 	}
-	_, err = p.Try(p.Rune('?'))(st)
+	_, err = p.Try(p.Chr('?'))(st)
 	option := err == nil
 	return Type{t.(reflect.Type), option}, nil
 }

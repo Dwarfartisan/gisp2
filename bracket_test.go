@@ -4,15 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 func TestBracketParser(t *testing.T) {
 	data := "dict[\"meta\"]"
-	st := p.MemoryParseState(data)
-	re, err := p.Bind(AtomParser, BracketSuffixParser)(st)
+	st := p.BasicStateFromText(data)
+	re, err := p.M(AtomParser).Bind(BracketSuffixParser)(&st)
 	if err != nil {
-		t.Fatalf("except a Dot but error %v", err)
+		t.Fatalf("expect a Dot but error %v", err)
 	}
 	t.Log(re)
 }
@@ -44,7 +44,7 @@ func TestBracketExpression(t *testing.T) {
 	g.DefAs("list", l)
 	pi, err := g.Parse("([0] list)")
 	if err != nil {
-		t.Fatalf("except got pi but error: %v", err)
+		t.Fatalf("expect got pi but error: %v", err)
 	}
 	if pi.(Float) != Float(3.14) {
 		t.Fatalf("excpet got pi as float 3.14 but %v", pi)
@@ -61,7 +61,7 @@ func TestBracketExpressionMap(t *testing.T) {
 	get := bv.MethodByName("Get")
 	res := get.Call([]reflect.Value{reflect.ValueOf("b")})
 	if !reflect.DeepEqual(res[0].Interface(), box["b"]) {
-		t.Fatalf("except %v but got %v", box["b"], res[0].Interface())
+		t.Fatalf("expect %v but got %v", box["b"], res[0].Interface())
 	}
 	g := NewGisp(map[string]Toolbox{
 		"axioms": Axiom,
@@ -73,7 +73,7 @@ func TestBracketExpressionMap(t *testing.T) {
 		t.Fatalf("excpet got b but error %v", err)
 	}
 	if !reflect.DeepEqual(c, box["c"]) {
-		t.Fatalf("except %v but gt %v", box["c"], c)
+		t.Fatalf("expect %v but gt %v", box["c"], c)
 	}
 
 }

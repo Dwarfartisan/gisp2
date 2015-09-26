@@ -91,15 +91,15 @@ func TestMoneyMul(t *testing.T) {
 	g.Defun("*", mrmul())
 	mulx, ok := g.Lookup("*")
 	if !ok {
-		t.Fatalf("except got overloaded function *")
+		t.Fatalf("expect got overloaded function *")
 	}
 
 	ret, err := g.Eval(List{mulx, in, ratio})
 	if err != nil {
-		t.Fatalf("except %v * %v is %v but error %v", in, ratio, out, err)
+		t.Fatalf("expect %v * %v is %v but error %v", in, ratio, out, err)
 	}
 	if !reflect.DeepEqual(ret, out) {
-		t.Fatalf("except %v * %v is %v but %v", in, ratio, out, ret)
+		t.Fatalf("expect %v * %v is %v but %v", in, ratio, out, ret)
 	}
 }
 
@@ -114,14 +114,14 @@ func TestMulAutoOverload(t *testing.T) {
 	g.Defun("*", mrmul())
 	mulx, ok := g.Lookup("*")
 	if !ok {
-		t.Fatalf("except got overloaded function *")
+		t.Fatalf("expect got overloaded function *")
 	}
 
 	ret, err := g.Eval(List{mulx, in, ratio})
 	if err != nil {
-		t.Fatalf("except %v * %v is %v but error %v", in, ratio, out, err)
+		t.Fatalf("expect %v * %v is %v but error %v", in, ratio, out, err)
 	}
 	if !reflect.DeepEqual(ret, out) {
-		t.Fatalf("except %v * %v is %v but %v", in, ratio, out, ret)
+		t.Fatalf("expect %v * %v is %v but %v", in, ratio, out, ret)
 	}
 }

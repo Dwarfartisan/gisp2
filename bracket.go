@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	p "github.com/Dwarfartisan/goparsec"
 	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Bracket 实现中括号表达式的解析，包括序列索引、切割，字典的key查找
@@ -180,24 +180,24 @@ func IntVal(st px.ParsexState) (interface{}, error) {
 	if _, ok := x.(Int); ok {
 		return x, nil
 	}
-	return nil, fmt.Errorf("except a Int value but got %v", x)
+	return nil, fmt.Errorf("expect a Int value but got %v", x)
 }
 
 // BracketParser 尝试将 state 中下一个值解析为中括号表达式
-func BracketParser(st p.ParseState) (interface{}, error) {
-	return p.Between(p.Rune('['), p.Rune(']'),
-		p.SepBy1(ValueParser, p.Rune(':')),
-	)(st)
-}
-
-// BracketParserExt 在带有 Ext 的环境下对中括号表达式求值
-func BracketParserExt(env Env) p.Parser {
-	return p.Between(p.Rune('['), p.Rune(']'),
-		p.SepBy1(ValueParserExt(env), p.Rune(':')),
+func BracketParser() p.Parsec {
+	return p.Between(p.Chr('['), p.Chr(']'),
+		p.SepBy1(ValueParser(), p.Chr(':')),
 	)
 }
 
-//BracketExpr 结构实现中括号表达式的
+// BracketParserExt 在带有 Ext 的环境下解析中括号表达式
+func BracketParserExt(env Env) p.Parsec {
+	return p.Between(p.Chr('['), p.Chr(']'),
+		p.SepBy1(ValueParserExt(env), p.Chr(':')),
+	)
+}
+
+//BracketExpr 结构实现中括号表达式的求值逻辑
 type BracketExpr struct {
 	Expr []interface{}
 }
@@ -205,14 +205,14 @@ type BracketExpr struct {
 // Task 的实现会返回 Bracket 对象
 func (be BracketExpr) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("Bracket Expression Args Error: except a arg but %v", args)
+		return nil, fmt.Errorf("Bracket Expression Args Error: expect a arg but %v", args)
 	}
 	return Bracket{args[0], be.Expr}, nil
 }
 
 // BracketExprParserExt 返回带 Ext 环境的 BracketExpr 。
-func BracketExprParserExt(env Env) p.Parser {
-	return func(st p.ParseState) (interface{}, error) {
+func BracketExprParserExt(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		expr, err := BracketParserExt(env)(st)
 		if err != nil {
 			return nil, err

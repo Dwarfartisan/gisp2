@@ -18,11 +18,11 @@ func TestGinqSelect(t *testing.T) {
 (ginq (select [1]))
 `)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error: %v ", err)
+		t.Fatalf("expect got a ginq query but error: %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error: %v", err)
+		t.Fatalf("expect got columns from data but error: %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -42,11 +42,11 @@ func TestGinqSelectFields(t *testing.T) {
 (ginq (select (fs [1] [2] [4])))
 `)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error %v", err)
+		t.Fatalf("expect got columns from data but error %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -69,11 +69,11 @@ func TestGinqWhereSelect(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error %v", err)
+		t.Fatalf("expect got columns from data but error %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -99,11 +99,11 @@ func TestGinqSum(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error: %v", err)
+		t.Fatalf("expect got columns from data but error: %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -129,11 +129,11 @@ func TestGinqGroupBy(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error: %v", err)
+		t.Fatalf("expect got columns from data but error: %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -159,11 +159,11 @@ func TestGinqGroupBySumSelect(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got columns from data but error: %v", err)
+		t.Fatalf("expect got columns from data but error: %v", err)
 	}
 
 	t.Logf("ginq select got %v", re)
@@ -190,11 +190,11 @@ func TestGinqGroupBySumSelectWhere(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got group sum from data but error: %v", err)
+		t.Fatalf("expect got group sum from data but error: %v", err)
 	}
 	t.Logf("ginq group sum select got %v", re)
 }
@@ -219,11 +219,11 @@ func TestGinqGroupByMaxSelect(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got group max from data but error: %v", err)
+		t.Fatalf("expect got group max from data but error: %v", err)
 	}
 	t.Logf("ginq group max select got %v", re)
 }
@@ -248,11 +248,11 @@ func TestGinqGroupByMinSelect(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got group min from data but error: %v", err)
+		t.Fatalf("expect got group min from data but error: %v", err)
 	}
 	t.Logf("ginq group min select got %v", re)
 }
@@ -277,11 +277,11 @@ func TestGinqGroupByCount(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq query but error %v ", err)
+		t.Fatalf("expect got a ginq query but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got group count from data but error: %v", err)
+		t.Fatalf("expect got group count from data but error: %v", err)
 	}
 	t.Logf("ginq group count select got %v", re)
 }
@@ -307,11 +307,11 @@ func TestGinqSort(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq sort but error %v ", err)
+		t.Fatalf("expect got a ginq sort but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got ginq sort from data but error: %v", err)
+		t.Fatalf("expect got ginq sort from data but error: %v", err)
 	}
 	t.Logf("ginq sort got %v", re)
 }
@@ -337,11 +337,11 @@ func TestGinqSortBy(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq sortby but error %v ", err)
+		t.Fatalf("expect got a ginq sortby but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got ginq sortby from data but error: %v", err)
+		t.Fatalf("expect got ginq sortby from data but error: %v", err)
 	}
 	t.Logf("ginq sort got %v", re)
 }
@@ -368,11 +368,11 @@ func TestGinqReverse(t *testing.T) {
 	)
 	`)
 	if err != nil {
-		t.Fatalf("except got a ginq sortby but error %v ", err)
+		t.Fatalf("expect got a ginq sortby but error %v ", err)
 	}
 	re, err := g.Eval(L(ginq, data))
 	if err != nil {
-		t.Fatalf("except got ginq reverse from data but error: %v", err)
+		t.Fatalf("expect got ginq reverse from data but error: %v", err)
 	}
 	t.Logf("ginq sort by then reverse got %v", re)
 }

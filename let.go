@@ -3,7 +3,7 @@ package gisp
 import (
 	"fmt"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Let 实现 let 环境
@@ -14,10 +14,10 @@ type Let struct {
 
 // LetFunc 构造一个 Let 环境
 func LetFunc(env Env, args ...interface{}) (Lisp, error) {
-	st := px.NewStateInMemory(args)
-	_, err := TypeAs(LIST)(st)
+	st := p.NewBasicState(args)
+	_, err := TypeAs(LIST)(&st)
 	if err != nil {
-		return nil, ParsexSignErrorf("Let Args Error: except args list but error: %v", err)
+		return nil, fmt.Errorf("Let Args Error: expect args list but error: %v", err)
 	}
 
 	local := map[string]Var{}
@@ -47,10 +47,10 @@ func LetExpr(env Env, args ...interface{}) (Tasker, error) {
 		ok   bool
 	)
 	if len(args) < 1 {
-		return nil, ParsexSignErrorf("let args error: except vars list at last but a empty let as (let )")
+		return nil, fmt.Errorf("let args error: expect vars list at last but a empty let as (let )")
 	}
 	if vars, ok = args[0].(List); !ok {
-		return nil, ParsexSignErrorf("let args error: except vars list but %v", args[0])
+		return nil, fmt.Errorf("let args error: expect vars list but %v", args[0])
 	}
 	return func(env Env) (interface{}, error) {
 		local := map[string]Var{}

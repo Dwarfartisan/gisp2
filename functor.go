@@ -1,7 +1,9 @@
 package gisp
 
 import (
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	"fmt"
+
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // 函数的求值总是延迟到一个 TaskBox 中，这样可以在需要的时候异步化
@@ -14,11 +16,11 @@ type Functor interface {
 // ArgsSignChecker 定义函数签名的验证器类型
 type ArgsSignChecker func(args ...interface{}) error
 
-// ParsexSignChecker 定义 Parsex 环境下的函数签名验证器
-func ParsexSignChecker(parser px.Parser) ArgsSignChecker {
+// SignChecker 定义 Parsex 环境下的函数签名验证器
+func SignChecker(parser p.Parsec) ArgsSignChecker {
 	return func(args ...interface{}) error {
-		st := px.NewStateInMemory(args)
-		_, err := parser(st)
+		st := p.NewBasicState(args)
+		_, err := parser(&st)
 		return err
 	}
 }
@@ -93,7 +95,7 @@ func (box ExprxBox) Task(env Env, args ...interface{}) (Lisp, error) {
 	}
 	err = box.checker(params...)
 	if err != nil {
-		return nil, ParsexSignErrorf("Args Type Sign Error: pass %v got error: %v", args, err)
+		return nil, fmt.Errorf("Args Type Sign Error: pass %v got error: %v", args, err)
 	}
 
 	return box.TaskerBox.Task(env, args...)
@@ -113,7 +115,7 @@ func BoxExpr(expr TaskExpr) TaskerBox {
 func (box TaskerBox) Task(env Env, args ...interface{}) (Lisp, error) {
 	task, err := box.functor(env, args...)
 	if err != nil {
-		return nil, ParsexSignErrorf("Args Type Sign Error: pass %v got error: %v", args, err)
+		return nil, fmt.Errorf("Args Type Sign Error: pass %v got error: %v", args, err)
 	}
 	return TaskBox{task}, nil
 }
@@ -132,7 +134,8 @@ func EvalExpr(expr LispExpr) EvalBox {
 func (box EvalBox) Task(env Env, args ...interface{}) (Lisp, error) {
 	lisp, err := box.functor(env, args...)
 	if err != nil {
-		return nil, ParsexSignErrorf("Args Type Sign Error: pass %v got error: %v", args, err)
+		//		panic(args[0])
+		return nil, fmt.Errorf("Eval Expr Call Error: pass %v got error: %v", args, err)
 	}
 	return lisp, nil
 }

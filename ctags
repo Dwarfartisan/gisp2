@@ -41,7 +41,7 @@ ParsecBox	parsec.go	/^func ParsecBox(parser p.Parser) Lisp {$/
 ParsexBox	parsex.go	/^func ParsexBox(parser px.Parser) Lisp {$/
 ParsexExpr	proposition.go	/^func ParsexExpr(pxExpr px.Parser) LispExpr {$/
 ParsexReverseExpr	proposition.go	/^func ParsexReverseExpr(pxExpr px.Parser) LispExpr /
-ParsexSignErrorf	function.go	/^func ParsexSignErrorf(message string, args ...inte/
+fmt.Errorf	function.go	/^func fmt.Errorf(message string, args ...inte/
 Q	quote.go	/^func Q(x interface{}) Quote {$/
 QuoteParserExt	parses.go	/^func QuoteParserExt(env Env) p.Parser {$/
 StrictVarAs	var.go	/^func StrictVarAs(x interface{}) StrictVar {$/

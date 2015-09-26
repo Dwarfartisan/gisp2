@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // NotStructError 定义struct查找错误
@@ -77,8 +77,8 @@ func (dot Dot) evalValue(env Env, val reflect.Value, name Atom) (interface{}, er
 }
 
 // DotParser 定义了从文本中解析出 Dot 表达式的 Parser
-func DotParser(st p.ParseState) (interface{}, error) {
-	name, err := p.Bind_(p.Rune('.'), atomNameParser)(st)
+func DotParser(st p.State) (interface{}, error) {
+	name, err := p.Chr('.').Then(atomNameParser()).Parse(st)
 	if err != nil {
 		return nil, err
 	}
@@ -93,14 +93,14 @@ type DotExpr struct {
 // Task 方法实现 dot 表达式的求值
 func (de DotExpr) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf("Dot expression Args Error: except 1 arg but %v", args)
+		return nil, fmt.Errorf("Dot expression Args Error: expect 1 arg but %v", args)
 	}
 	return Dot{args[0], AA(de.Name)}, nil
 }
 
 // DotExprParser 实现 Dot 表达式的解析构造
-func DotExprParser(st p.ParseState) (interface{}, error) {
-	name, err := p.Bind_(p.Rune('.'), atomNameParser)(st)
+func DotExprParser(st p.State) (interface{}, error) {
+	name, err := p.Chr('.').Then(atomNameParser())(st)
 	if err != nil {
 		return nil, err
 	}

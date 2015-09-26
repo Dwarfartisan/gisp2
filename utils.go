@@ -14,7 +14,7 @@ var Utils = Toolkit{
 	Content: map[string]interface{}{
 		"errorf": func(env Env, args ...interface{}) (Tasker, error) {
 			if len(args) < 1 {
-				return nil, ParsexSignErrorf("Errorf Empty Arg Error:except args has 1 arg a last.")
+				return nil, fmt.Errorf("Errorf Empty Arg Error:expect args has 1 arg a last.")
 			}
 			params, err := Evals(env, args...)
 			if err != nil {
@@ -25,11 +25,11 @@ var Utils = Toolkit{
 					return nil, fmt.Errorf(tmpl, params[1:]...)
 				}, nil
 			}
-			return nil, ParsexSignErrorf("Errorf Arg Error:except first arg is a string but %v.", args[0])
+			return nil, fmt.Errorf("Errorf Arg Error:expect first arg is a string but %v.", args[0])
 		},
 		"error": func(env Env, args ...interface{}) (Tasker, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Error Arg Error:except args has 1 arg.")
+				return nil, fmt.Errorf("Error Arg Error:expect args has 1 arg.")
 			}
 			params, err := Evals(env, args...)
 			if err != nil {
@@ -48,7 +48,7 @@ var Utils = Toolkit{
 
 func printf(env Env, args ...interface{}) (Tasker, error) {
 	if len(args) < 1 {
-		return nil, ParsexSignErrorf("Printf Empty Arg Error:except args has 1 arg a last.")
+		return nil, fmt.Errorf("Printf Empty Arg Error:expect args has 1 arg a last.")
 	}
 	params, err := Evals(env, args...)
 	if err != nil {
@@ -59,5 +59,5 @@ func printf(env Env, args ...interface{}) (Tasker, error) {
 			return fmt.Printf(tmpl, params[1:]...)
 		}, nil
 	}
-	return nil, ParsexSignErrorf("Printf Arg Error:except first arg is a string but %v.", args[0])
+	return nil, fmt.Errorf("Printf Arg Error:expect first arg is a string but %v.", args[0])
 }

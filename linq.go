@@ -16,7 +16,7 @@ type Linq interface {
 	Distinct() Linq
 	DistinctBy(f func(T, T) (bool, error)) Linq
 	ElementAt(i int) (elem T, found bool, err error)
-	Except(inputSlice T) Linq
+	expect(inputSlice T) Linq
 	First() (elem T, found bool, err error)
 	FirstBy(f func(T) (bool, error)) (elem T, found bool, err error)
 	GroupBy(keySelector func(T) T, valueSelector func(T) T) (map[T][]T, error)

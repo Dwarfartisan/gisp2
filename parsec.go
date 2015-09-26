@@ -2,22 +2,22 @@ package gisp
 
 import (
 	"fmt"
+	//	p "github.com/Dwarfartisan/goparsec/parsex"
 	"reflect"
 
-	p "github.com/Dwarfartisan/goparsec"
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
-// Parsec 定义了 parsec 包的结构
+// Parsec 包为 gisp 解释器提供 parsec 解析工具
 var Parsec = Toolkit{
 	Meta: map[string]interface{}{
-		"name":     "parsex",
+		"name":     "parsec",
 		"category": "package",
 	},
 	Content: map[string]interface{}{
 		"state": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsex Arg Error:except args has 1 arg.")
+				return nil, fmt.Errorf("Parsex Arg Error:expect args has 1 arg.")
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -25,14 +25,16 @@ var Parsec = Toolkit{
 			}
 			switch data := param.(type) {
 			case string:
-				return Q(p.MemoryParseState(data)), nil
+				return Q(NewStringState(data)), nil
+			case List:
+				return Q(p.NewBasicState(data)), nil
 			default:
-				return nil, fmt.Errorf("Parsex Error: Except create a state from a string or List but %v", data)
+				return nil, fmt.Errorf("Parsex Error: expect create a state from a string or List but %v", data)
 			}
 		},
 		"s2str": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Slice to string Arg Error:except args has 1 arg.")
+				return nil, fmt.Errorf("Slice to string Arg Error:expect args has 1 arg.")
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -43,52 +45,114 @@ var Parsec = Toolkit{
 				ok    bool
 			)
 			if slice, ok = param.([]interface{}); !ok {
-				return nil, ParsexSignErrorf("s2str Arg Error:except 1 []interface{} arg.")
+				return nil, fmt.Errorf("s2str Arg Error:expect 1 []interface{} arg")
 			}
-			return Q(p.ExtractString(slice)), nil
+			return Q(p.ToString(slice)), nil
+		},
+		"one": ParsecBox(p.One),
+		"eq": func(env Env, args ...interface{}) (Lisp, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("Equal Arg Error:expect args has 1 arg")
+			}
+			param, err := Eval(env, args[0])
+			if err != nil {
+				return nil, err
+			}
+			return ParsecBox(p.Eq(param)), nil
 		},
 		"str": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Str Arg Error:except args has 1 arg.")
+				return nil, fmt.Errorf("One Arg Error:expect args has 1 arg")
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
 				return nil, err
 			}
-			var (
-				data string
-				ok   bool
-			)
-			if data, ok = param.(string); !ok {
-				return nil, ParsexSignErrorf("Str Arg Error:except args has 1 string arg.")
-			}
-			return ParsecBox(p.String(data)), nil
+			return ParsecBox(p.Str(param.(string))), nil
 		},
 		"rune": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Rune Arg Error:except args has 1 arg.")
+				return nil, fmt.Errorf("Rune Arg Error:expect args has 1 arg")
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
 				return nil, err
 			}
-			var (
-				data Rune
-				ok   bool
-			)
-			if data, ok = param.(Rune); !ok {
-				return nil, ParsexSignErrorf("One Arg Error:except args has 1 rune arg but %v.", reflect.TypeOf(param))
-			}
-			return ParsecBox(p.Rune(rune(data))), nil
+			return ParsecBox(p.Chr(rune(param.(Rune)))), nil
 		},
-		"anyone": ParsecBox(p.AnyRune),
-		"int":    ParsecBox(p.Int),
-		"float":  ParsecBox(p.Float),
-		"digit":  ParsecBox(p.Digit),
-		"eof":    ParsecBox(p.Eof),
+		"asint":   ParsecBox(p.AsInt),
+		"asfloat": ParsecBox(p.AsFloat64),
+		"asstr":   ParsecBox(p.AsString),
+		"string": func(env Env, args ...interface{}) (Lisp, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("string Arg Error:expect args has 1 arg")
+			}
+			param, err := Eval(env, args[0])
+			if err != nil {
+				return nil, err
+			}
+			var str string
+			var ok bool
+			if str, ok = param.(string); !ok {
+				return nil, fmt.Errorf("string Arg Error:expect 1 string arg")
+			}
+			return ParsecBox(p.Str(str)), nil
+		},
+		"digit": ParsecBox(p.Digit),
+		"int": func(env Env, args ...interface{}) (Lisp, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("int Arg Error:expect args has 1 arg")
+			}
+			param, err := Eval(env, args[0])
+			if err != nil {
+				return nil, err
+			}
+			var i Int
+			var ok bool
+			if i, ok = param.(Int); !ok {
+				return nil, fmt.Errorf("int Arg Error:expect 1 string arg")
+			}
+			return ParsecBox(func(st p.State) (interface{}, error) {
+				data, err := p.Int(st)
+				if err != nil {
+					return nil, st.Trap("gisp parsex error:expect a int but error: %v", err)
+				}
+				if Int(data.(int)) != i {
+					return nil, st.Trap("gisp parsex error:expect a Int but %v", data)
+				}
+				return data, nil
+			}), nil
+		},
+		"float": func(env Env, args ...interface{}) (Lisp, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("float Arg Error:expect args has 1 arg")
+			}
+			param, err := Eval(env, args[0])
+			if err != nil {
+				return nil, err
+			}
+			var f Float
+			var ok bool
+			if f, ok = param.(Float); !ok {
+				return nil, fmt.Errorf("float Arg Error:expect 1 string arg")
+			}
+			return ParsecBox(func(st p.State) (interface{}, error) {
+				data, err := p.AsFloat64(st)
+				if err != nil {
+					return nil, st.Trap("gisp parsex error:expect a float but error: %v", err)
+				}
+				if Float(data.(float64)) != f {
+					return nil, st.Trap("gisp parsex error:expect a Float but %v", data)
+				}
+				return data, nil
+			}), nil
+		},
+		"eof":    ParsecBox(p.EOF),
+		"nil":    ParsecBox(p.Nil),
+		"atimex": ParsecBox(TimeValue),
 		"try": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Try Error: only accept one Parsec Parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Try Error: only accept one parsex parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -98,39 +162,39 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Try(parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Try Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Try Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 
 		},
 		"either": func(env Env, args ...interface{}) (Lisp, error) {
-			ptype := reflect.TypeOf((px.Parser)(nil))
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			ptype := reflect.TypeOf((p.Parsec)(nil))
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
-			return ParsecBox(p.Either(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
+			return ParsecBox(p.Choice(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
 		},
 		"choice": func(env Env, args ...interface{}) (Lisp, error) {
-			ptype := reflect.TypeOf((px.Parser)(nil))
-			params, err := GetArgs(env, px.ManyTil(TypeAs(ptype), px.Eof), args)
+			ptype := reflect.TypeOf((p.Parsec)(nil))
+			params, err := GetArgs(env, p.ManyTil(TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
-			parsers := make([]p.Parser, len(params))
+			parsers := make([]p.Parsec, len(params))
 			for idx, prs := range params {
 				if parser, ok := prs.(Parsecer); ok {
 					parsers[idx] = parser.Parser
 				}
-				return nil, ParsexSignErrorf("Choice Args Error:except parsec parsers but %v is %v",
+				return nil, fmt.Errorf("Choice Args Error:expect parsec parsers but %v is %v",
 					prs, reflect.TypeOf(prs))
 			}
 			return ParsecBox(p.Choice(parsers...)), nil
 		},
 		"return": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Return Error: only accept one Parsec Parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Return Error: only accept one parsec parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -140,7 +204,7 @@ var Parsec = Toolkit{
 		},
 		"option": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 2 {
-				return nil, ParsexSignErrorf("Parsec Parser Option Error: only accept two Parsec Parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Option Error: only accept two parsex parser as arg but %v", args)
 			}
 			data, err := Eval(env, args[0])
 			if err != nil {
@@ -154,14 +218,14 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Option(data, parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Many Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Many Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 		},
 		"many1": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Many1 Erroparserr: only accept one Parsec Parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Many1 Erroparserr: only accept one parsex parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -171,14 +235,14 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Many1(parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Many1 Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Many1 Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 		},
 		"many": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Many Error: only accept one Parsec Parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Many Error: only accept one parsex parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -188,14 +252,14 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Many(parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Many Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Many Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 		},
 		"failed": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Failed Error: only accept one string as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Failed Error: only accept one string as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -204,47 +268,27 @@ var Parsec = Toolkit{
 			var str string
 			var ok bool
 			if str, ok = param.(string); !ok {
-				return nil, ParsexSignErrorf("Failed Arg Error:except 1 string arg.")
+				return nil, fmt.Errorf("Failed Arg Error:expect 1 string arg.")
 			}
 			return ParsecBox(p.Fail(str)), nil
 		},
 		"oneof": func(env Env, args ...interface{}) (Lisp, error) {
-			if len(args) != 1 {
-				return nil, ParsexSignErrorf("OneOf Arg Error:except args has 1 arg.")
-			}
-			param, err := Eval(env, args[0])
+			params, err := Evals(env, args...)
 			if err != nil {
 				return nil, err
 			}
-			var (
-				data string
-				ok   bool
-			)
-			if data, ok = param.(string); !ok {
-				return nil, ParsexSignErrorf("OneOf Arg Error:except args has 1 string arg.")
-			}
-			return ParsecBox(p.OneOf(data)), nil
+			return ParsecBox(p.OneOf(params...)), nil
 		},
 		"noneof": func(env Env, args ...interface{}) (Lisp, error) {
-			if len(args) != 1 {
-				return nil, ParsexSignErrorf("NoneOf Arg Error:except args has 1 arg.")
-			}
-			param, err := Eval(env, args[0])
+			params, err := Evals(env, args...)
 			if err != nil {
 				return nil, err
 			}
-			var (
-				data string
-				ok   bool
-			)
-			if data, ok = param.(string); !ok {
-				return nil, ParsexSignErrorf("NoneOf Arg Error:except args has 1 string arg.")
-			}
-			return ParsecBox(p.NoneOf(data)), nil
+			return ParsecBox(p.NoneOf(params)), nil
 		},
 		"between": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
@@ -252,7 +296,7 @@ var Parsec = Toolkit{
 		},
 		"bind": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 2 {
-				return nil, ParsexSignErrorf("Bind Args Error:except 2 args.")
+				return nil, fmt.Errorf("Bind Args Error:expect 2 args.")
 			}
 			prs, err := Eval(env, args[0])
 			if err != nil {
@@ -261,55 +305,55 @@ var Parsec = Toolkit{
 			var parser Parsecer
 			var ok bool
 			if parser, ok = prs.(Parsecer); !ok {
-				return nil, ParsexSignErrorf("Bind Args Error:except first arg is a parsecer.")
+				return nil, fmt.Errorf("Bind Args Error:expect first arg is a Parsecer.")
 			}
 			f, err := Eval(env, args[1])
 			if err != nil {
 				return nil, err
 			}
 			switch fun := f.(type) {
-			case func(interface{}) p.Parser:
-				return ParsecBox(p.Bind(parser.Parser, fun)), nil
+			case func(interface{}) p.Parsec:
+				return ParsecBox(parser.Parser.Bind(fun)), nil
 			case Functor:
-				return ParsecBox(p.Bind(parser.Parser, func(x interface{}) p.Parser {
+				return ParsecBox(parser.Parser.Bind(func(x interface{}) p.Parsec {
 					tasker, err := fun.Task(env, x)
 					if err != nil {
-						return func(st p.ParseState) (interface{}, error) {
+						return func(st p.State) (interface{}, error) {
 							return nil, err
 						}
 					}
 					pr, err := tasker.Eval(env)
 					if err != nil {
-						return func(st p.ParseState) (interface{}, error) {
+						return func(st p.State) (interface{}, error) {
 							return nil, err
 						}
 					}
 					switch parser := pr.(type) {
-					case p.Parser:
+					case p.Parsec:
 						return parser
 					case Parsecer:
 						return parser.Parser
 					default:
-						return func(st p.ParseState) (interface{}, error) {
-							return nil, ParsexSignErrorf("excpet got a parser but %v", pr)
+						return func(st p.State) (interface{}, error) {
+							return nil, fmt.Errorf("excpet got a parser but %v", pr)
 						}
 					}
 				})), nil
 			default:
-				return nil, ParsexSignErrorf("excpet got a parser but %v", prs)
+				return nil, fmt.Errorf("excpet got a parser but %v", prs)
 			}
 		},
-		"bind_": func(env Env, args ...interface{}) (Lisp, error) {
+		"then": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
-			return ParsecBox(p.Bind_(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
+			return ParsecBox(params[0].(Parsecer).Parser.Then(params[1].(Parsecer).Parser)), nil
 		},
 		"sepby1": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
@@ -317,7 +361,7 @@ var Parsec = Toolkit{
 		},
 		"sepby": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
@@ -325,7 +369,7 @@ var Parsec = Toolkit{
 		},
 		"manytil": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
-			params, err := GetArgs(env, px.UnionAll(TypeAs(ptype), TypeAs(ptype), px.Eof), args)
+			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
@@ -333,7 +377,7 @@ var Parsec = Toolkit{
 		},
 		"maybe": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Maybe Error: only accept one parsec parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Maybe Error: only accept one parsex parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -343,14 +387,14 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Maybe(parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Manybe Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Manybe Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 		},
 		"skip": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {
-				return nil, ParsexSignErrorf("Parsec Parser Skip Error: only accept one parsec parser as arg but %v", args)
+				return nil, fmt.Errorf("Parsex Parser Skip Error: only accept one parsex parser as arg but %v", args)
 			}
 			param, err := Eval(env, args[0])
 			if err != nil {
@@ -360,23 +404,29 @@ var Parsec = Toolkit{
 			case Parsecer:
 				return ParsecBox(p.Skip(parser.Parser)), nil
 			default:
-				return nil, ParsexSignErrorf(
-					"Skip Arg Error:except 1 parser arg but %v.",
+				return nil, fmt.Errorf(
+					"Skip Arg Error:expect 1 parser arg but %v.",
 					reflect.TypeOf(param))
 			}
 		},
 	},
 }
 
-// Parsecer 定了一个对 Parsec 解释器的封装
-type Parsecer struct {
-	Parser p.Parser
+// NewStringState 构造一个新的基于字符串的 state
+func NewStringState(data string) p.State {
+	re := p.BasicStateFromText(data)
+	return &re
 }
 
-// Task 实现了其求值逻辑
-func (parsec Parsecer) Task(env Env, args ...interface{}) (Lisp, error) {
+// Parsecer 实现一个 parsex 封装
+type Parsecer struct {
+	Parser p.Parsec
+}
+
+// Task 定义了 parsex 的求值
+func (parser Parsecer) Task(env Env, args ...interface{}) (Lisp, error) {
 	if len(args) != 1 {
-		return nil, ParsexSignErrorf(
+		return nil, fmt.Errorf(
 			"Parsec Parser Exprission Error: only accept one parsec state as arg but %v",
 			args[0])
 	}
@@ -384,33 +434,33 @@ func (parsec Parsecer) Task(env Env, args ...interface{}) (Lisp, error) {
 	if err != nil {
 		return nil, err
 	}
-	var st p.ParseState
+	var st p.State
 	var ok bool
-	if st, ok = param.(p.ParseState); !ok {
-		return nil, ParsexSignErrorf(
+	if st, ok = param.(p.State); !ok {
+		return nil, fmt.Errorf(
 			"Parsec Parser Exprission Error: only accept one parsec state as arg but %v",
 			reflect.TypeOf(args[0]))
 	}
-	return ParsecTask{parsec.Parser, st}, nil
+	return ParsecTask{parser.Parser, st}, nil
 }
 
-// Eval 实现了 Parsecer 的求值解析
-func (parsec Parsecer) Eval(env Env) (interface{}, error) {
-	return parsec, nil
+// Eval 定义了其解析求值时直接返回 parser
+func (parser Parsecer) Eval(env Env) (interface{}, error) {
+	return parser, nil
 }
 
-// ParsecBox 返回一个封装的 paer
-func ParsecBox(parser p.Parser) Lisp {
+// ParsecBox 定义了一个 Parsecer 的封装
+func ParsecBox(parser p.Parsec) Lisp {
 	return Parsecer{parser}
 }
 
-// ParsecTask 是延迟执行 Parsec 逻辑的封装
+// ParsecTask 定义了延迟执行 Parsex 的行为
 type ParsecTask struct {
-	Parser p.Parser
-	State  p.ParseState
+	Parser p.Parsec
+	State  p.State
 }
 
-// Eval 实现了求值
+// Eval 定义了 parsec task 的解析求值
 func (pt ParsecTask) Eval(env Env) (interface{}, error) {
 	return pt.Parser(pt.State)
 }

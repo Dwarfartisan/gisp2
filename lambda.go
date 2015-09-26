@@ -3,7 +3,7 @@ package gisp
 import (
 	"fmt"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Lambda 实现基本的 Lambda 行为
@@ -31,14 +31,14 @@ func DeclareLambda(env Env, args List, lisps ...interface{}) (*Lambda, error) {
 
 // LambdaExpr 生成一个封装后的 Lambda 表达式
 func LambdaExpr(env Env, args ...interface{}) (Tasker, error) {
-	st := px.NewStateInMemory(args)
-	_, err := TypeAs(LIST)(st)
+	st := p.NewBasicState(args)
+	_, err := TypeAs(LIST)(&st)
 	if err != nil {
-		return nil, ParsexSignErrorf("Lambda Args Error: except args list but error: %v", err)
+		return nil, st.Trap("Lambda Args Error: expect args list but error: %v", err)
 	}
 	lptr, err := DeclareLambda(env, args[0].(List), args[1:]...)
 	if err != nil {
-		return nil, fmt.Errorf("Lambda Args Error: except lambda tasker but error: %v", err)
+		return nil, fmt.Errorf("Lambda Args Error: expect lambda tasker but error: %v", err)
 	}
 	return Q(lptr).Eval, nil
 }
@@ -58,21 +58,21 @@ func (lambda *Lambda) prepareArgs(args List) {
 		isVariadic = true
 	}
 	lambda.Meta["is variadic"] = isVariadic
-	ps := make([]px.Parser, l+1)
+	ps := make([]p.Parsec, l+1)
 	for idx, arg := range args[:lidx] {
 		ps[idx] = argParser(arg.(Atom))
 		formals[idx] = arg
 	}
 	if isVariadic {
 		varArg := args[l-2].(Atom)
-		ps[lidx] = px.Many(argParser(last))
+		ps[lidx] = p.Many(argParser(last))
 		larg := Atom{varArg.Name, varArg.Type}
 		formals[lidx] = larg
 	} else {
 		ps[lidx] = argParser(last)
 		formals[lidx] = last
 	}
-	ps[l] = px.Eof
+	ps[l] = p.EOF
 	lambda.Meta["formal parameters"] = formals
 	lambda.Meta["parameter parsexs"] = ps
 }
@@ -179,9 +179,9 @@ func (lambda Lambda) MatchArgsSign(env Env, args ...interface{}) (interface{}, e
 		}
 		params[idx] = param
 	}
-	pxs := lambda.Meta["parameter parsexs"].([]px.Parser)
-	st := px.NewStateInMemory(params)
-	return px.UnionAll(pxs...)(st)
+	pxs := lambda.Meta["parameter parsexs"].([]p.Parsec)
+	st := p.NewBasicState(params)
+	return p.UnionAll(pxs...)(&st)
 }
 
 // Task create a lambda s-Expr can be eval

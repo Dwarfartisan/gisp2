@@ -1,49 +1,50 @@
 package gisp
 
 import (
-	p "github.com/Dwarfartisan/goparsec"
 	"testing"
+
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 func TestIntParser0(t *testing.T) {
 	data := "12"
-	st := p.MemoryParseState(data)
-	o, err := IntParser(st)
+	st := p.BasicStateFromText(data)
+	o, err := IntParser(&st)
 	if err != nil {
-		t.Fatalf("except a Int but error %v", err)
+		t.Fatalf("expect a Int but error %v", err)
 	}
 	if i, ok := o.(Int); ok {
 		if i != Int(12) {
-			t.Fatalf("except a Int 12 but %v", i)
+			t.Fatalf("expect a Int 12 but %v", i)
 		}
 	} else {
-		t.Fatalf("except Int but %v", o)
+		t.Fatalf("expect Int but %v", o)
 	}
 }
 
 func TestIntParser1(t *testing.T) {
 	data := "i234"
-	st := p.MemoryParseState(data)
-	o, err := IntParser(st)
+	st := p.BasicStateFromText(data)
+	o, err := IntParser(&st)
 	if err == nil {
-		t.Fatalf("except a Int parse error but got %v", o)
+		t.Fatalf("expect a Int parse error but got %v", o)
 	}
 }
 
 func TestIntParser2(t *testing.T) {
 	data := ".234"
-	st := p.MemoryParseState(data)
-	o, err := IntParser(st)
+	st := p.BasicStateFromText(data)
+	o, err := IntParser(&st)
 	if err == nil {
-		t.Fatalf("except a Float parse error but got %v", o)
+		t.Fatalf("expect a Float parse error but got %v", o)
 	}
 }
 
 func TestIntParser3(t *testing.T) {
 	data := "3.14"
-	st := p.MemoryParseState(data)
-	o, err := p.Bind_(IntParser, p.Eof)(st)
+	st := p.BasicStateFromText(data)
+	o, err := p.M(IntParser).Then(p.EOF)(&st)
 	if err == nil {
-		t.Fatalf("except a Float parse error but got %v", o)
+		t.Fatalf("expect a Float parse error but got %v", o)
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // TypeMatchError 定了类型匹配错误
@@ -45,8 +45,8 @@ func (err NotNumberError) Error() string {
 }
 
 // IntValue 将所有整型处理为 Int ，其它类型不接受
-func IntValue(st px.ParsexState) (interface{}, error) {
-	v, err := st.Next(px.Always)
+func IntValue(st p.State) (interface{}, error) {
+	v, err := st.Next()
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +69,8 @@ func IntValue(st px.ParsexState) (interface{}, error) {
 }
 
 // FloatValue 将所有浮点型处理为 Float ，其它类型不接受
-func FloatValue(st px.ParsexState) (interface{}, error) {
-	v, err := st.Next(px.Always)
+func FloatValue(st p.State) (interface{}, error) {
+	v, err := st.Next()
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +87,8 @@ func FloatValue(st px.ParsexState) (interface{}, error) {
 }
 
 // NumberValue 将所有整型和浮点型处理为 Float ，其它类型不接受
-func NumberValue(st px.ParsexState) (interface{}, error) {
-	v, err := st.Next(px.Always)
+func NumberValue(st p.State) (interface{}, error) {
+	v, err := st.Next()
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,8 @@ func NumberValue(st px.ParsexState) (interface{}, error) {
 }
 
 // Int2Values 获取多个 int
-var Int2Values = px.Bind(IntValue, func(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+var Int2Values = p.M(IntValue).Bind(func(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err != nil {
 			return nil, err
@@ -128,8 +128,8 @@ var Int2Values = px.Bind(IntValue, func(x interface{}) px.Parser {
 })
 
 // Num2Values 获取多个 int
-var Num2Values = px.Bind(NumberValue, func(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+var Num2Values = p.M(NumberValue).Bind(func(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := NumberValue(st)
 		if err != nil {
 			return nil, err
@@ -138,14 +138,14 @@ var Num2Values = px.Bind(NumberValue, func(x interface{}) px.Parser {
 	}
 })
 
-func xEOF(x interface{}) px.Parser {
-	return px.Bind_(px.Eof, px.Return(x))
+func xEOF(x interface{}) p.Parsec {
+	return p.M(p.EOF).Then(p.Return(x))
 }
 
 // addx 实现一个parsex累加解析器，精度向上适配。我一直觉得应该有一个简单的高效版本，不需要回溯的
 // 但是目前还没有找到。
-func addx(st px.ParsexState) (interface{}, error) {
-	ints, err := px.Try(px.ManyTil(IntValue, px.Eof))(st)
+func addx(st p.State) (interface{}, error) {
+	ints, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
 	if err == nil {
 		root := Int(0)
 		for _, x := range ints.([]interface{}) {
@@ -153,7 +153,7 @@ func addx(st px.ParsexState) (interface{}, error) {
 		}
 		return root, nil
 	}
-	numbers, err := px.ManyTil(NumberValue, px.Eof)(st)
+	numbers, err := p.ManyTil(NumberValue, p.EOF)(st)
 	if err == nil {
 		root := Float(0)
 		for _, x := range numbers.([]interface{}) {
@@ -185,8 +185,8 @@ func addFloats(floats ...interface{}) (interface{}, error) {
 }
 
 // subx 实现一个左折叠的 parsex 连减解析器，精度向上适配。
-func subx(st px.ParsexState) (interface{}, error) {
-	data, err := px.Try(px.ManyTil(IntValue, px.Eof))(st)
+func subx(st p.State) (interface{}, error) {
+	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -195,7 +195,7 @@ func subx(st px.ParsexState) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = px.ManyTil(NumberValue, px.Eof)(st)
+	data, err = p.ManyTil(NumberValue, p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)
@@ -211,9 +211,9 @@ func subx(st px.ParsexState) (interface{}, error) {
 	return nil, err
 }
 
-// mulx 实现一个 parsex 累乘解析器，精度向上适配。
-func mulx(st px.ParsexState) (interface{}, error) {
-	data, err := px.Try(px.ManyTil(IntValue, px.Eof))(st)
+// mulx 实现一个 parsec 累乘解析器，精度向上适配。
+func mulx(st p.State) (interface{}, error) {
+	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -222,7 +222,7 @@ func mulx(st px.ParsexState) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = px.ManyTil(NumberValue, px.Eof)(st)
+	data, err = p.ManyTil(NumberValue, p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)
@@ -237,9 +237,9 @@ func mulx(st px.ParsexState) (interface{}, error) {
 	return nil, err
 }
 
-// divx 实现一个左折叠的 parsex 连除解析器，精度向上适配。
-func divx(st px.ParsexState) (interface{}, error) {
-	data, err := px.Try(px.ManyTil(IntValue, px.Eof))(st)
+// divx 实现一个左折叠的 parsec 连除解析器，精度向上适配。
+func divx(st p.State) (interface{}, error) {
+	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -248,7 +248,7 @@ func divx(st px.ParsexState) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = px.ManyTil(NumberValue, px.Eof)(st)
+	data, err = p.ManyTil(NumberValue, p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)

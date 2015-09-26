@@ -4,61 +4,62 @@ import (
 	"reflect"
 	"testing"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 func TestAtomParse0(t *testing.T) {
 	data := "x"
-	state := p.MemoryParseState(data)
-	a, err := AtomParser(state)
+	state := p.BasicStateFromText(data)
+	a, err := AtomParser(&state)
 	if err == nil {
 		test := Atom{"x", Type{ANY, false}}
 		if !reflect.DeepEqual(test, a) {
-			t.Fatalf("except Atom{\"x\", ANY} but %v", a)
+			t.Fatalf("expect Atom{\"x\", ANY} but %v", a)
 		}
 	} else {
-		t.Fatalf("except Atom{\"x\", ANY} but %v", err)
+		t.Fatalf("expect Atom{\"x\", ANY} but %v", err)
 	}
 }
 
 func TestAtomParse1(t *testing.T) {
 	data := "x::atom"
-	state := p.MemoryParseState(data)
-	a, err := AtomParser(state)
+	state := p.BasicStateFromText(data)
+	a, err := AtomParser(&state)
 	if err == nil {
 		test := Atom{"x", Type{ATOM, false}}
-		if !reflect.DeepEqual(test, a) {
-			t.Fatalf("except Atom{\"x\", ATOM} but %v", a)
+		d := a.(Atom)
+		if !reflect.DeepEqual(test, d) {
+			t.Fatalf("expect Atom{\"x\", ATOM} but {Name:%v, Type:%v}", d.Name, d.Type)
 		}
 	} else {
-		t.Fatalf("except Atom{\"x\", ATOM} but %v", err)
+		t.Fatalf("expect Atom{\"x\", ATOM} but error %v", err)
 	}
 }
 
 func TestAtomParse2(t *testing.T) {
 	data := "x::any"
-	state := p.MemoryParseState(data)
-	a, err := AtomParser(state)
+	state := p.BasicStateFromText(data)
+	a, err := AtomParser(&state)
 	if err == nil {
 		test := Atom{"x", Type{ANY, false}}
 		if !reflect.DeepEqual(test, a) {
-			t.Fatalf("except Atom{\"x\", ANY} but %v", a)
+			t.Fatalf("expect Atom{\"x\", ANY} but %v", a)
 		}
 	} else {
-		t.Fatalf("except Atom{\"x\", ANY} but %v", err)
+		t.Fatalf("expect Atom{\"x\", ANY} but %v", err)
 	}
 }
 
 func TestAtomParse3(t *testing.T) {
 	data := "x::int"
-	state := p.MemoryParseState(data)
-	a, err := AtomParser(state)
+	state := p.BasicStateFromText(data)
+	a, err := AtomParser(&state)
 	if err == nil {
 		test := Atom{"x", Type{INT, false}}
 		if !reflect.DeepEqual(test, a) {
-			t.Fatalf("except Atom{\"x\", INT} but %v", a)
+			t.Fatalf("expect Atom{\"x\", INT} but %v", a)
 		}
 	} else {
-		t.Fatalf("except Atom{\"x\", INT} but %v", err)
+		t.Fatalf("expect Atom{\"x\", INT} but %v", err)
 	}
 }

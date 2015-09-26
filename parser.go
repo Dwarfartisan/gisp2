@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	p "github.com/Dwarfartisan/goparsec"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Gisp 实现一个基本的 gisp 解释器
@@ -131,16 +131,16 @@ func (gisp Gisp) Global(name string) (interface{}, bool) {
 
 // Parse 解释执行一段文本
 func (gisp *Gisp) Parse(code string) (interface{}, error) {
-	st := p.MemoryParseState(code)
+	st := p.BasicStateFromText(code)
 	var v interface{}
 	var e error
 	for {
-		Skip(st)
-		_, err := p.Eof(st)
+		Skip(&st)
+		_, err := p.Try(p.EOF)(&st)
 		if err == nil {
 			break
 		}
-		value, err := ValueParserExt(gisp)(st)
+		value, err := ValueParserExt(gisp)(&st)
 		if err != nil {
 			return nil, err
 		}

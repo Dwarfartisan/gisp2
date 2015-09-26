@@ -6,13 +6,13 @@ import (
 	"reflect"
 	tm "time"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // FalseIfHasNil 实现一个 is nil 判断
-func FalseIfHasNil(st px.ParsexState) (interface{}, error) {
+func FalseIfHasNil(st p.State) (interface{}, error) {
 	for {
-		val, err := px.AnyOne(st)
+		val, err := p.One(st)
 		if err != nil {
 			if err == io.EOF {
 				return nil, fmt.Errorf("False If Nil Error: Found EOF.")
@@ -26,33 +26,33 @@ func FalseIfHasNil(st px.ParsexState) (interface{}, error) {
 }
 
 // LessThanNil 实现三值 Less
-func LessThanNil(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		val, _ := px.AnyOne(st)
+func LessThanNil(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		val, _ := p.One(st)
 		if x == nil || val == nil {
 			return false, nil
 		}
-		return nil, ParsexSignErrorf("except nil value but: %v", val)
+		return nil, st.Trap("expect nil value but: %v", val)
 	}
 }
 
 // ListValue 检查 state 中下一个值是否是列表
-func ListValue(st px.ParsexState) (interface{}, error) {
-	val, err := px.AnyOne(st)
+func ListValue(st p.State) (interface{}, error) {
+	val, err := p.One(st)
 	if err == nil {
 		if _, ok := val.(List); ok {
 			return val, nil
 		}
-		return nil, ParsexSignErrorf("except a list value but %v ", val)
+		return nil, fmt.Errorf("expect a list value but %v ", val)
 	}
-	return nil, ParsexSignErrorf("except a list value but error: %v", err)
+	return nil, fmt.Errorf("expect a list value but error: %v", err)
 }
 
 // LessThanList 从最近的环境中找到 < 的实现并调用其进行比较，这样用户可以自己实现特化的比较
-func LessThanList(env Env) func(x interface{}) px.Parser {
+func LessThanList(env Env) func(x interface{}) p.Parsec {
 	lessp, ok := env.Lookup("<")
-	return func(x interface{}) px.Parser {
-		return func(st px.ParsexState) (interface{}, error) {
+	return func(x interface{}) p.Parsec {
+		return func(st p.State) (interface{}, error) {
 			if !ok {
 				return nil, fmt.Errorf("Less Than List Error: opreator < not found")
 			}
@@ -75,10 +75,10 @@ func LessThanList(env Env) func(x interface{}) px.Parser {
 }
 
 // LessThanListOption 允许返回 nil
-func LessThanListOption(env Env) func(x interface{}) px.Parser {
+func LessThanListOption(env Env) func(x interface{}) p.Parsec {
 	lessp, ok := env.Lookup("<?")
-	return func(x interface{}) px.Parser {
-		return func(st px.ParsexState) (interface{}, error) {
+	return func(x interface{}) p.Parsec {
+		return func(st p.State) (interface{}, error) {
 			if !ok {
 				return nil, fmt.Errorf("Less Than List Option Error: <? opreator not found")
 			}
@@ -101,20 +101,20 @@ func LessThanListOption(env Env) func(x interface{}) px.Parser {
 }
 
 // TimeValue 判断 state 中下一个元素是否为 time.Time
-func TimeValue(st px.ParsexState) (interface{}, error) {
-	val, err := px.AnyOne(st)
+func TimeValue(st p.State) (interface{}, error) {
+	val, err := p.One(st)
 	if err == nil {
 		if _, ok := val.(tm.Time); ok {
 			return val, nil
 		}
-		return nil, ParsexSignErrorf("except a time value but: %v", err)
+		return nil, fmt.Errorf("expect a time value but: %v", err)
 	}
-	return nil, ParsexSignErrorf("except a time value but error: %v", err)
+	return nil, fmt.Errorf("expect a time value but error: %v", err)
 }
 
 // LessThanTime 对 Time 值进行比较
-func LessThanTime(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func LessThanTime(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err == nil {
 			return x.(tm.Time).Before(y.(tm.Time)), nil
@@ -124,17 +124,19 @@ func LessThanTime(x interface{}) px.Parser {
 }
 
 // StringValue 判断 state 中下一个值是否为 String
-func StringValue(st px.ParsexState) (interface{}, error) {
-	val, err := px.StringVal(st)
-	if err == nil {
-		return val, nil
-	}
-	return nil, ParsexSignErrorf("except a string value but error: %v", err)
+func StringValue(st p.State) (interface{}, error) {
+	return p.Do(func(state p.State) interface{} {
+		val := p.M(p.One).Exec(state)
+		if _, ok := val.(string); ok {
+			return val
+		}
+		panic(st.Trap("expect a string but %v", val))
+	})(st)
 }
 
 // LessThanInt 实现整数的比较
-func LessThanInt(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func LessThanInt(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err == nil {
 			return x.(Int) < y.(Int), nil
@@ -144,8 +146,8 @@ func LessThanInt(x interface{}) px.Parser {
 }
 
 // LessThanFloat 实现浮点数的比较
-func LessThanFloat(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func LessThanFloat(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := FloatValue(st)
 		if err == nil {
 			switch val := x.(type) {
@@ -154,7 +156,7 @@ func LessThanFloat(x interface{}) px.Parser {
 			case Int:
 				return Float(val) < y.(Float), nil
 			default:
-				return nil, ParsexSignErrorf("unknown howto compoare %v < %v", x, y)
+				return nil, st.Trap("unknown howto compoare %v < %v", x, y)
 			}
 		}
 		return nil, err
@@ -162,8 +164,8 @@ func LessThanFloat(x interface{}) px.Parser {
 }
 
 // LessThanNumber 实现数值的比较
-func LessThanNumber(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func LessThanNumber(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		pos := st.Pos()
 		cmp, err := LessThanInt(x)(st)
 		if err == nil {
@@ -175,13 +177,13 @@ func LessThanNumber(x interface{}) px.Parser {
 }
 
 // LessThanString 实现字符串的比较
-func LessThanString(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		y, err := px.StringVal(st)
+func LessThanString(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		y, err := StringValue(st)
 		if err == nil {
 			return x.(string) < y.(string), nil
 		}
-		return nil, ParsexSignErrorf("Except less compare string %v and %v but error: %v",
+		return nil, st.Trap("expect less compare string %v and %v but error: %v",
 			x, y, err)
 	}
 }
@@ -220,19 +222,19 @@ func lessListOptIn(env Env, x, y List) (interface{}, error) {
 	return len(x) < len(y), nil
 }
 
-func less(env Env) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		l, err := px.Bind(px.Choice(
-			px.Try(px.Bind(IntValue, LessThanNumber)),
-			px.Try(px.Bind(NumberValue, LessThanFloat)),
-			px.Try(px.Bind(px.StringVal, LessThanString)),
-			px.Try(px.Bind(TimeValue, LessThanTime)),
-			px.Bind(ListValue, LessThanList(env)),
-		), func(l interface{}) px.Parser {
-			return func(st px.ParsexState) (interface{}, error) {
-				_, err := px.Eof(st)
+func less(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		l, err := p.Choice(
+			p.Try(p.M(IntValue).Bind(LessThanNumber)),
+			p.Try(p.M(NumberValue).Bind(LessThanFloat)),
+			p.Try(p.M(StringValue).Bind(LessThanString)),
+			p.Try(p.M(TimeValue).Bind(LessThanTime)),
+			p.M(ListValue).Bind(LessThanList(env)),
+		).Bind(func(l interface{}) p.Parsec {
+			return func(st p.State) (interface{}, error) {
+				_, err := p.EOF(st)
 				if err != nil {
-					return nil, ParsexSignErrorf("less args sign error: except eof")
+					return nil, st.Trap("less args sign error: expect eof")
 				}
 				return l, nil
 			}
@@ -240,25 +242,25 @@ func less(env Env) px.Parser {
 		if err == nil {
 			return l, nil
 		}
-		return nil, ParsexSignErrorf("Except two lessable values compare but error %v", err)
+		return nil, st.Trap("expect two lessable values compare but error %v", err)
 	}
 }
 
 // return false, true or nil
-func lessOption(env Env) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		l, err := px.Bind(px.Choice(
-			px.Try(px.Bind(IntValue, LessThanNumber)),
-			px.Try(px.Bind(NumberValue, LessThanFloat)),
-			px.Try(px.Bind(px.StringVal, LessThanString)),
-			px.Try(px.Bind(TimeValue, LessThanTime)),
-			px.Try(px.Bind(ListValue, LessThanListOption(env))),
-			px.Bind(px.AnyOne, LessThanNil),
-		), func(l interface{}) px.Parser {
-			return func(st px.ParsexState) (interface{}, error) {
-				_, err := px.Eof(st)
+func lessOption(env Env) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		l, err := p.Choice(
+			p.Try(p.M(IntValue).Bind(LessThanNumber)),
+			p.Try(p.M(NumberValue).Bind(LessThanFloat)),
+			p.Try(p.M(StringValue).Bind(LessThanString)),
+			p.Try(p.M(TimeValue).Bind(LessThanTime)),
+			p.Try(p.M(ListValue).Bind(LessThanListOption(env))),
+			p.M(p.One).Bind(LessThanNil),
+		).Bind(func(l interface{}) p.Parsec {
+			return func(st p.State) (interface{}, error) {
+				_, err := p.EOF(st)
 				if err != nil {
-					return nil, ParsexSignErrorf("less args sign error: except eof")
+					return nil, st.Trap("less args sign error: expect eof")
 				}
 				return l, nil
 			}
@@ -266,7 +268,7 @@ func lessOption(env Env) px.Parser {
 		if err == nil {
 			return l, nil
 		}
-		return nil, ParsexSignErrorf("Except two lessable values or nil compare but error: %v", err)
+		return nil, st.Trap("expect two lessable values or nil compare but error: %v", err)
 	}
 }
 
@@ -341,8 +343,8 @@ func cmpListIn(env Env, x, y List) (interface{}, error) {
 }
 
 // CmpInt 实现两个整数的三向比较
-func CmpInt(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func CmpInt(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err == nil {
 			return cmpInt(x.(Int), y.(Int)), nil
@@ -352,8 +354,8 @@ func CmpInt(x interface{}) px.Parser {
 }
 
 // CmpFloat 实现两个浮点数的三向比较
-func CmpFloat(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func CmpFloat(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := FloatValue(st)
 		if err == nil {
 			switch val := x.(type) {
@@ -362,7 +364,7 @@ func CmpFloat(x interface{}) px.Parser {
 			case Int:
 				return cmpFloat(Float(val), y.(Float)), nil
 			default:
-				return nil, ParsexSignErrorf("unknown howto compoare %v < %v", x, y)
+				return nil, st.Trap("unknown howto compoare %v < %v", x, y)
 			}
 		}
 		return nil, err
@@ -370,8 +372,8 @@ func CmpFloat(x interface{}) px.Parser {
 }
 
 // CmpNumber 实现两个数值的三向比较
-func CmpNumber(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func CmpNumber(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		pos := st.Pos()
 		cmp, err := CmpInt(x)(st)
 		if err == nil {
@@ -383,40 +385,40 @@ func CmpNumber(x interface{}) px.Parser {
 }
 
 // CmpString 实现两个字符串的三向比较
-func CmpString(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		y, err := px.StringVal(st)
+func CmpString(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		y, err := StringValue(st)
 		if err == nil {
 			return cmpString(x.(string), y.(string)), nil
 		}
-		return nil, ParsexSignErrorf("Except less compare string %v and %v but error: %v",
+		return nil, st.Trap("expect less compare string %v and %v but error: %v",
 			x, y, err)
 	}
 }
 
 // CmpTime 实现两个Time的三向比较
-func CmpTime(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+func CmpTime(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err == nil {
 			return cmpTime(x.(tm.Time), y.(tm.Time)), nil
 		}
-		return nil, ParsexSignErrorf("Except less compare string %v and %v but error: %v",
+		return nil, fmt.Errorf("expect less compare string %v and %v but error: %v",
 			x, y, err)
 	}
 }
 
-func compare(st px.ParsexState) (interface{}, error) {
-	l, err := px.Bind(px.Choice(
-		px.Bind(IntValue, LessThanNumber),
-		px.Bind(NumberValue, LessThanFloat),
-		px.Bind(px.StringVal, LessThanString),
-		px.Bind(TimeValue, LessThanTime),
-	), func(l interface{}) px.Parser {
-		return func(st px.ParsexState) (interface{}, error) {
-			_, err := px.Eof(st)
+func compare(st p.State) (interface{}, error) {
+	l, err := p.Choice(
+		p.Try(IntValue).Bind(LessThanNumber),
+		p.Try(NumberValue).Bind(LessThanFloat),
+		p.Try(StringValue).Bind(LessThanString),
+		p.M(TimeValue).Bind(LessThanTime),
+	).Bind(func(l interface{}) p.Parsec {
+		return func(st p.State) (interface{}, error) {
+			_, err := p.EOF(st)
 			if err != nil {
-				return nil, ParsexSignErrorf("less args sign error: except eof")
+				return nil, fmt.Errorf("less args sign error: expect eof")
 			}
 			return l, nil
 		}
@@ -424,17 +426,17 @@ func compare(st px.ParsexState) (interface{}, error) {
 	if err == nil {
 		return l, nil
 	}
-	return nil, ParsexSignErrorf("Except two lessable values compare but error %v", err)
+	return nil, fmt.Errorf("expect two lessable values compare but error %v", err)
 }
 
-func equals(st px.ParsexState) (interface{}, error) {
-	return px.Bind(px.AnyOne, eqs)(st)
+func equals(st p.State) (interface{}, error) {
+	return p.M(p.One).Bind(eqs)(st)
 }
-func eqs(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		y, err := st.Next(px.Always)
+func eqs(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		y, err := st.Next()
 		if err != nil {
-			if reflect.DeepEqual(err, io.EOF) {
+			if e, ok := err.(p.Error); ok && e.Message == "eof" {
 				return true, nil
 			}
 			return nil, err
@@ -446,13 +448,13 @@ func eqs(x interface{}) px.Parser {
 	}
 }
 
-func equalsOption(st px.ParsexState) (interface{}, error) {
-	return px.Bind(px.AnyOne, eqsOption)(st)
+func equalsOption(st p.State) (interface{}, error) {
+	return p.M(p.One).Bind(eqsOption)(st)
 }
 
-func eqsOption(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		y, err := st.Next(px.Always)
+func eqsOption(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		y, err := st.Next()
 		if err != nil {
 			if reflect.DeepEqual(err, io.EOF) {
 				return true, nil
@@ -469,13 +471,13 @@ func eqsOption(x interface{}) px.Parser {
 	}
 }
 
-func notEquals(st px.ParsexState) (interface{}, error) {
-	return px.Bind(px.AnyOne, neqs)(st)
+func notEquals(st p.State) (interface{}, error) {
+	return p.M(p.One).Bind(neqs)(st)
 }
 
-func neqs(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
-		y, err := st.Next(px.Always)
+func neqs(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
+		y, err := st.Next()
 		if err != nil {
 			if reflect.DeepEqual(err, io.EOF) {
 				return false, nil
@@ -493,8 +495,8 @@ func neqs(x interface{}) px.Parser {
 }
 
 // not equals function, NotEqual or !=, if anyone is nil, return false
-func neqsOption(st px.ParsexState) (interface{}, error) {
-	x, err := st.Next(px.Always)
+func neqsOption(st p.State) (interface{}, error) {
+	x, err := st.Next()
 	if err != nil {
 		return nil, err
 	}
@@ -502,7 +504,7 @@ func neqsOption(st px.ParsexState) (interface{}, error) {
 		return false, nil
 	}
 	for {
-		y, err := st.Next(px.Always)
+		y, err := st.Next()
 		if err != nil {
 			if reflect.DeepEqual(err, io.EOF) {
 				return false, nil
@@ -519,8 +521,8 @@ func neqsOption(st px.ParsexState) (interface{}, error) {
 }
 
 // String2Values 将两个 StringValue 串为 List
-var String2Values = px.Bind(StringValue, func(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+var String2Values = p.M(StringValue).Bind(func(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := StringValue(st)
 		if err != nil {
 			return nil, err
@@ -530,8 +532,8 @@ var String2Values = px.Bind(StringValue, func(x interface{}) px.Parser {
 })
 
 //TimeValue 将两个 Time 值串为 List
-var Time2Values = px.Bind(TimeValue, func(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+var Time2Values = p.M(TimeValue).Bind(func(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err != nil {
 			return nil, err
@@ -541,8 +543,8 @@ var Time2Values = px.Bind(TimeValue, func(x interface{}) px.Parser {
 })
 
 //ListValue 将两个 Time 值串为 List
-var List2Values = px.Bind(ListValue, func(x interface{}) px.Parser {
-	return func(st px.ParsexState) (interface{}, error) {
+var List2Values = p.M(ListValue).Bind(func(x interface{}) p.Parsec {
+	return func(st p.State) (interface{}, error) {
 		y, err := ListValue(st)
 		if err != nil {
 			return nil, err

@@ -14,21 +14,6 @@ func (err TypeSignError) Error() string {
 	return fmt.Sprintf("%v can't match %v", err.Value, err.Type)
 }
 
-// ParsexSignError 定义了在解析过程中遇到的签名错误
-type ParsexSignError struct {
-	message string
-	args    []interface{}
-}
-
-// ParsexSignErrorf 方法构造指定的 ParsexSignError
-func ParsexSignErrorf(message string, args ...interface{}) ParsexSignError {
-	return ParsexSignError{message, args}
-}
-
-func (err ParsexSignError) Error() string {
-	return fmt.Sprintf(err.message, err.args...)
-}
-
 // Func 接口定义可以 Overload 的 Gisp 函数类型
 type Func interface {
 	Functor

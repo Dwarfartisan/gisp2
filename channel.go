@@ -3,7 +3,7 @@ package gisp
 import (
 	"reflect"
 
-	px "github.com/Dwarfartisan/goparsec/parsex"
+	p "github.com/Dwarfartisan/goparsec2"
 )
 
 // Chan 封装 golang 的 channel 功能
@@ -68,40 +68,33 @@ var channel = Toolkit{
 	},
 	Content: map[string]interface{}{
 		"chan": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem()),
-				TypeAs(INT),
-				px.Eof)),
+			SignChecker(p.M(TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem())).
+				Then(TypeAs(INT)).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					return MakeBothChan(args[0].(reflect.Type), args[1].(Int)), nil
 				}
 			}},
 		"chan->": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem()),
-				TypeAs(INT),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem()).
+				Then(TypeAs(INT)).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					return MakeRecvChan(args[0].(reflect.Type), args[1].(Int)), nil
 				}
 			}},
 		"chan<-": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem()),
-				TypeAs(INT),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem()).
+				Then(TypeAs(INT)).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					return MakeSendChan(args[0].(reflect.Type), args[1].(Int)), nil
 				}
 			}},
 		"send": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*Chan)(nil))),
-				px.Either(px.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST)),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*Chan)(nil))).
+				Then(p.Choice(p.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST))).
+				Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					ch := args[0].(*Chan)
@@ -110,10 +103,9 @@ var channel = Toolkit{
 				}
 			}},
 		"send?": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*Chan)(nil))),
-				px.Either(px.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST)),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*Chan)(nil))).
+				Then(p.Choice(p.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST))).
+				Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					ch := args[0].(*Chan)
@@ -122,10 +114,8 @@ var channel = Toolkit{
 				}
 			}},
 		"recv": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*Chan)(nil))),
-				px.Either(px.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST)),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*Chan)(nil))).
+				Then(p.Choice(p.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST)).Then(p.EOF))),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					ch := args[0].(*Chan)
@@ -134,10 +124,8 @@ var channel = Toolkit{
 				}
 			}},
 		"recv?": SimpleBox{
-			ParsexSignChecker(px.Binds_(
-				TypeAs(reflect.TypeOf((*Chan)(nil))),
-				px.Either(px.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST)),
-				px.Eof)),
+			SignChecker(TypeAs(reflect.TypeOf((*Chan)(nil))).
+				Then(p.Choice(p.Try(TypeAs(ANYOPTION)), TypeAs(ANYMUST))).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					ch := args[0].(*Chan)
