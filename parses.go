@@ -28,57 +28,52 @@ func IntParser(st p.State) (interface{}, error) {
 }
 
 // 用于string
-var EscapeChars = p.Chr('\\').Then(func(st p.State) (interface{}, error) {
-	r, err := p.RuneOf("nrt\"\\")(st)
-	if err == nil {
-		ru := r.(rune)
-		switch ru {
-		case 'r':
-			return '\r', nil
-		case 'n':
-			return '\n', nil
-		case '"':
-			return '"', nil
-		case '\\':
-			return '\\', nil
-		case 't':
-			return '\t', nil
-		default:
-			return nil, st.Trap("Unknown escape sequence \\%c", r)
-		}
-	} else {
-		return nil, err
+var EscapeChars = p.Do(func(st p.State) interface{} {
+	p.Chr('\\').Exec(st)
+	r := p.RuneOf("nrt\"\\").Exec(st)
+	ru := r.(rune)
+	switch ru {
+	case 'r':
+		return '\r'
+	case 'n':
+		return '\n'
+	case '"':
+		return '"'
+	case '\\':
+		return '\\'
+	case 't':
+		return '\t'
+	default:
+		panic(st.Trap("Unknown escape sequence \\%c", r))
 	}
 })
 
 //用于rune
-var EscapeCharr = p.Chr('\\').Then(func(st p.State) (interface{}, error) {
-	r, err := p.RuneOf("nrt'\\")(st)
-	if err == nil {
-		ru := r.(rune)
-		switch ru {
-		case 'r':
-			return '\r', nil
-		case 'n':
-			return '\n', nil
-		case '\'':
-			return '\'', nil
-		case '\\':
-			return '\\', nil
-		case 't':
-			return '\t', nil
-		default:
-			return nil, st.Trap("Unknown escape sequence \\%c", r)
-		}
-	} else {
-		return nil, err
+var EscapeCharr = p.Do(func(st p.State) interface{} {
+	p.Chr('\\').Exec(st)
+	r := p.RuneOf("nrt'\\").Exec(st)
+	ru := r.(rune)
+	switch ru {
+	case 'r':
+		return '\r'
+	case 'n':
+		return '\n'
+	case '\'':
+		return '\''
+	case '\\':
+		return '\\'
+	case 't':
+		return '\t'
+	default:
+		panic(st.Trap("Unknown escape sequence \\%c", r))
 	}
 })
 
 // RuneParser 实现 rune 的解析
 var RuneParser = p.Do(func(state p.State) interface{} {
-	c := p.Between(p.Chr('\''), p.Chr('\''),
-		p.Choice(p.Try(EscapeCharr), p.NChr('\''))).Exec(state)
+	p.Chr('\'').Exec(state)
+	c := p.Choice(p.Try(EscapeCharr), p.NChr('\'')).Exec(state)
+	p.Chr('\'').Exec(state)
 	return Rune(c.(rune))
 })
 
