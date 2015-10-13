@@ -23,7 +23,7 @@ var Axiom = Toolkit{
 		}),
 		"var": LispExpr(func(env Env, args ...interface{}) (Lisp, error) {
 			st := p.NewBasicState(args)
-			_, err := TypeAs(ATOM).Then(p.Choice(p.Try(p.EOF), p.M(p.One).Then(p.EOF)))(&st)
+			_, err := TypeAs(ATOM).Then(p.Choice(p.Try(p.EOF), p.P(p.One).Then(p.EOF)))(&st)
 			if err != nil {
 				return nil, err
 			}

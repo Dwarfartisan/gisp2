@@ -117,7 +117,7 @@ func NumberValue(st p.State) (interface{}, error) {
 }
 
 // Int2Values 获取多个 int
-var Int2Values = p.M(IntValue).Bind(func(x interface{}) p.Parsec {
+var Int2Values = p.P(IntValue).Bind(func(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err != nil {
@@ -128,7 +128,7 @@ var Int2Values = p.M(IntValue).Bind(func(x interface{}) p.Parsec {
 })
 
 // Num2Values 获取多个 int
-var Num2Values = p.M(NumberValue).Bind(func(x interface{}) p.Parsec {
+var Num2Values = p.P(NumberValue).Bind(func(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := NumberValue(st)
 		if err != nil {
@@ -138,8 +138,8 @@ var Num2Values = p.M(NumberValue).Bind(func(x interface{}) p.Parsec {
 	}
 })
 
-func xEOF(x interface{}) p.Parsec {
-	return p.M(p.EOF).Then(p.Return(x))
+func xEOF(x interface{}) p.P {
+	return p.P(p.EOF).Then(p.Return(x))
 }
 
 // addx 实现一个parsex累加解析器，精度向上适配。我一直觉得应该有一个简单的高效版本，不需要回溯的

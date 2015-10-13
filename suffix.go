@@ -5,7 +5,7 @@ import (
 )
 
 // DotSuffix 表示带 dot 分割的后缀的表达式
-func DotSuffix(x interface{}) p.Parsec {
+func DotSuffix(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		d, err := DotParser(st)
 		if err != nil {
@@ -15,7 +15,7 @@ func DotSuffix(x interface{}) p.Parsec {
 	}
 }
 
-func dotSuffix(x interface{}) p.Parsec {
+func dotSuffix(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		d, err := p.Try(DotParser)(st)
 		if err != nil {
@@ -26,7 +26,7 @@ func dotSuffix(x interface{}) p.Parsec {
 }
 
 // BracketSuffix 表示带 [] 后缀的表达式
-func BracketSuffix(x interface{}) p.Parsec {
+func BracketSuffix(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		b, err := p.Try(BracketParser())(st)
 		if err != nil {
@@ -37,8 +37,8 @@ func BracketSuffix(x interface{}) p.Parsec {
 }
 
 // BracketSuffixExt 带扩展环境，可以在指定的环境中解释[]中的token
-func BracketSuffixExt(env Env) func(interface{}) p.Parsec {
-	return func(x interface{}) p.Parsec {
+func BracketSuffixExt(env Env) func(interface{}) p.P {
+	return func(x interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			b, err := p.Try(BracketParserExt(env))(st)
 			if err != nil {
@@ -49,7 +49,7 @@ func BracketSuffixExt(env Env) func(interface{}) p.Parsec {
 	}
 }
 
-func bracketSuffix(x interface{}) p.Parsec {
+func bracketSuffix(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		b, err := p.Try(BracketParser())(st)
 		if err != nil {
@@ -59,8 +59,8 @@ func bracketSuffix(x interface{}) p.Parsec {
 	}
 }
 
-func bracketSuffixExt(env Env) func(interface{}) p.Parsec {
-	return func(x interface{}) p.Parsec {
+func bracketSuffixExt(env Env) func(interface{}) p.P {
+	return func(x interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			b, err := p.Try(BracketParserExt(env))(st)
 			if err != nil {
@@ -72,17 +72,17 @@ func bracketSuffixExt(env Env) func(interface{}) p.Parsec {
 }
 
 // DotSuffixParser 定义 dot 表达式判定
-func DotSuffixParser(x interface{}) p.Parsec {
+func DotSuffixParser(x interface{}) p.P {
 	return p.Choice(p.Try(DotSuffix(x)), p.Return(x))
 }
 
 // BracketSuffixParser 定义 bracket 表达式判定
-func BracketSuffixParser(x interface{}) p.Parsec {
+func BracketSuffixParser(x interface{}) p.P {
 	return p.Choice(p.Try(BracketSuffix(x)), p.Return(x))
 }
 
 // SuffixParser 定义了后缀表达式的通用判定
-func SuffixParser(prefix interface{}) p.Parsec {
+func SuffixParser(prefix interface{}) p.P {
 	suffix := p.Choice(p.Try(DotSuffix(prefix)), BracketSuffix(prefix))
 	return func(st p.State) (interface{}, error) {
 		s, err := suffix(st)
@@ -94,8 +94,8 @@ func SuffixParser(prefix interface{}) p.Parsec {
 }
 
 // SuffixParserExt 在后缀表达式判定中允许传入环境
-func SuffixParserExt(env Env) func(interface{}) p.Parsec {
-	return func(prefix interface{}) p.Parsec {
+func SuffixParserExt(env Env) func(interface{}) p.P {
+	return func(prefix interface{}) p.P {
 		suffix := p.Choice(p.Try(DotSuffix(prefix)), BracketSuffixExt(env)(prefix))
 		return func(st p.State) (interface{}, error) {
 			s, err := p.Try(suffix)(st)

@@ -58,7 +58,7 @@ func (lambda *Lambda) prepareArgs(args List) {
 		isVariadic = true
 	}
 	lambda.Meta["is variadic"] = isVariadic
-	ps := make([]p.Parsec, l+1)
+	ps := make([]p.P, l+1)
 	for idx, arg := range args[:lidx] {
 		ps[idx] = argParser(arg.(Atom))
 		formals[idx] = arg
@@ -179,7 +179,7 @@ func (lambda Lambda) MatchArgsSign(env Env, args ...interface{}) (interface{}, e
 		}
 		params[idx] = param
 	}
-	pxs := lambda.Meta["parameter parsexs"].([]p.Parsec)
+	pxs := lambda.Meta["parameter parsexs"].([]p.P)
 	st := p.NewBasicState(params)
 	return p.UnionAll(pxs...)(&st)
 }

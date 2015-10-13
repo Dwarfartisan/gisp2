@@ -86,12 +86,12 @@ func bodyParser(st p.State) (interface{}, error) {
 	return value, err
 }
 
-func bodyParserExt(env Env) p.Parsec {
+func bodyParserExt(env Env) p.P {
 	return p.Many(ValueParserExt(env).Over(Skip))
 }
 
 // ListParser 实现列表解析器
-func ListParser() p.Parsec {
+func ListParser() p.P {
 	return func(st p.State) (interface{}, error) {
 		left := p.Chr('(').Then(Skip)
 		right := Skip.Then(p.Chr(')'))
@@ -117,7 +117,7 @@ func ListParser() p.Parsec {
 }
 
 // ListParserExt 实现带扩展的列表解析器
-func ListParserExt(env Env) p.Parsec {
+func ListParserExt(env Env) p.P {
 	left := p.Chr('(').Then(Skip)
 	right := Skip.Then(p.Chr(')'))
 	empty := left.Then(right)
@@ -146,7 +146,7 @@ func ListParserExt(env Env) p.Parsec {
 func QuoteParser(st p.State) (interface{}, error) {
 	lisp, err := p.Chr('\'').Then(
 		p.Choice(
-			p.Try(p.M(AtomParser).Bind(SuffixParser)),
+			p.Try(p.P(AtomParser).Bind(SuffixParser)),
 			ListParser().Bind(SuffixParser),
 		))(st)
 	if err == nil {
@@ -156,7 +156,7 @@ func QuoteParser(st p.State) (interface{}, error) {
 }
 
 // QuoteParserExt 实现带扩展的 Quote 语法的解析
-func QuoteParserExt(env Env) p.Parsec {
+func QuoteParserExt(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		lisp, err := p.Chr('\'').Then(p.Choice(
 			p.Try(AtomParserExt(env).Bind(SuffixParser)),
@@ -170,7 +170,7 @@ func QuoteParserExt(env Env) p.Parsec {
 }
 
 // ValueParser 实现简单的值解释器
-func ValueParser() p.Parsec {
+func ValueParser() p.P {
 	return func(state p.State) (interface{}, error) {
 		value, err := p.Choice(p.Try(StringParser),
 			p.Try(FloatParser),
@@ -179,8 +179,8 @@ func ValueParser() p.Parsec {
 			p.Try(StringParser),
 			p.Try(BoolParser),
 			p.Try(NilParser),
-			p.Try(p.M(AtomParser).Bind(SuffixParser)),
-			p.Try(p.M(ListParser()).Bind(SuffixParser)),
+			p.Try(p.P(AtomParser).Bind(SuffixParser)),
+			p.Try(p.P(ListParser()).Bind(SuffixParser)),
 			p.Try(DotExprParser),
 			QuoteParser,
 		)(state)
@@ -189,7 +189,7 @@ func ValueParser() p.Parsec {
 }
 
 // ValueParserExt 表示带扩展的值解释器
-func ValueParserExt(env Env) p.Parsec {
+func ValueParserExt(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		value, err := p.Choice(p.Try(StringParser),
 			p.Try(FloatParser),

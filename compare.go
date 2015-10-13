@@ -26,7 +26,7 @@ func FalseIfHasNil(st p.State) (interface{}, error) {
 }
 
 // LessThanNil 实现三值 Less
-func LessThanNil(x interface{}) p.Parsec {
+func LessThanNil(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		val, _ := p.One(st)
 		if x == nil || val == nil {
@@ -49,9 +49,9 @@ func ListValue(st p.State) (interface{}, error) {
 }
 
 // LessThanList 从最近的环境中找到 < 的实现并调用其进行比较，这样用户可以自己实现特化的比较
-func LessThanList(env Env) func(x interface{}) p.Parsec {
+func LessThanList(env Env) func(x interface{}) p.P {
 	lessp, ok := env.Lookup("<")
-	return func(x interface{}) p.Parsec {
+	return func(x interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			if !ok {
 				return nil, fmt.Errorf("Less Than List Error: opreator < not found")
@@ -75,9 +75,9 @@ func LessThanList(env Env) func(x interface{}) p.Parsec {
 }
 
 // LessThanListOption 允许返回 nil
-func LessThanListOption(env Env) func(x interface{}) p.Parsec {
+func LessThanListOption(env Env) func(x interface{}) p.P {
 	lessp, ok := env.Lookup("<?")
-	return func(x interface{}) p.Parsec {
+	return func(x interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			if !ok {
 				return nil, fmt.Errorf("Less Than List Option Error: <? opreator not found")
@@ -113,7 +113,7 @@ func TimeValue(st p.State) (interface{}, error) {
 }
 
 // LessThanTime 对 Time 值进行比较
-func LessThanTime(x interface{}) p.Parsec {
+func LessThanTime(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err == nil {
@@ -126,7 +126,7 @@ func LessThanTime(x interface{}) p.Parsec {
 // StringValue 判断 state 中下一个值是否为 String
 func StringValue(st p.State) (interface{}, error) {
 	return p.Do(func(state p.State) interface{} {
-		val := p.M(p.One).Exec(state)
+		val := p.P(p.One).Exec(state)
 		if _, ok := val.(string); ok {
 			return val
 		}
@@ -135,7 +135,7 @@ func StringValue(st p.State) (interface{}, error) {
 }
 
 // LessThanInt 实现整数的比较
-func LessThanInt(x interface{}) p.Parsec {
+func LessThanInt(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err == nil {
@@ -146,7 +146,7 @@ func LessThanInt(x interface{}) p.Parsec {
 }
 
 // LessThanFloat 实现浮点数的比较
-func LessThanFloat(x interface{}) p.Parsec {
+func LessThanFloat(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := FloatValue(st)
 		if err == nil {
@@ -164,7 +164,7 @@ func LessThanFloat(x interface{}) p.Parsec {
 }
 
 // LessThanNumber 实现数值的比较
-func LessThanNumber(x interface{}) p.Parsec {
+func LessThanNumber(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		pos := st.Pos()
 		cmp, err := LessThanInt(x)(st)
@@ -177,7 +177,7 @@ func LessThanNumber(x interface{}) p.Parsec {
 }
 
 // LessThanString 实现字符串的比较
-func LessThanString(x interface{}) p.Parsec {
+func LessThanString(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := StringValue(st)
 		if err == nil {
@@ -222,15 +222,15 @@ func lessListOptIn(env Env, x, y List) (interface{}, error) {
 	return len(x) < len(y), nil
 }
 
-func less(env Env) p.Parsec {
+func less(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		l, err := p.Choice(
-			p.Try(p.M(IntValue).Bind(LessThanNumber)),
-			p.Try(p.M(NumberValue).Bind(LessThanFloat)),
-			p.Try(p.M(StringValue).Bind(LessThanString)),
-			p.Try(p.M(TimeValue).Bind(LessThanTime)),
-			p.M(ListValue).Bind(LessThanList(env)),
-		).Bind(func(l interface{}) p.Parsec {
+			p.Try(p.P(IntValue).Bind(LessThanNumber)),
+			p.Try(p.P(NumberValue).Bind(LessThanFloat)),
+			p.Try(p.P(StringValue).Bind(LessThanString)),
+			p.Try(p.P(TimeValue).Bind(LessThanTime)),
+			p.P(ListValue).Bind(LessThanList(env)),
+		).Bind(func(l interface{}) p.P {
 			return func(st p.State) (interface{}, error) {
 				_, err := p.EOF(st)
 				if err != nil {
@@ -247,16 +247,16 @@ func less(env Env) p.Parsec {
 }
 
 // return false, true or nil
-func lessOption(env Env) p.Parsec {
+func lessOption(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		l, err := p.Choice(
-			p.Try(p.M(IntValue).Bind(LessThanNumber)),
-			p.Try(p.M(NumberValue).Bind(LessThanFloat)),
-			p.Try(p.M(StringValue).Bind(LessThanString)),
-			p.Try(p.M(TimeValue).Bind(LessThanTime)),
-			p.Try(p.M(ListValue).Bind(LessThanListOption(env))),
-			p.M(p.One).Bind(LessThanNil),
-		).Bind(func(l interface{}) p.Parsec {
+			p.Try(p.P(IntValue).Bind(LessThanNumber)),
+			p.Try(p.P(NumberValue).Bind(LessThanFloat)),
+			p.Try(p.P(StringValue).Bind(LessThanString)),
+			p.Try(p.P(TimeValue).Bind(LessThanTime)),
+			p.Try(p.P(ListValue).Bind(LessThanListOption(env))),
+			p.P(p.One).Bind(LessThanNil),
+		).Bind(func(l interface{}) p.P {
 			return func(st p.State) (interface{}, error) {
 				_, err := p.EOF(st)
 				if err != nil {
@@ -343,7 +343,7 @@ func cmpListIn(env Env, x, y List) (interface{}, error) {
 }
 
 // CmpInt 实现两个整数的三向比较
-func CmpInt(x interface{}) p.Parsec {
+func CmpInt(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := IntValue(st)
 		if err == nil {
@@ -354,7 +354,7 @@ func CmpInt(x interface{}) p.Parsec {
 }
 
 // CmpFloat 实现两个浮点数的三向比较
-func CmpFloat(x interface{}) p.Parsec {
+func CmpFloat(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := FloatValue(st)
 		if err == nil {
@@ -372,7 +372,7 @@ func CmpFloat(x interface{}) p.Parsec {
 }
 
 // CmpNumber 实现两个数值的三向比较
-func CmpNumber(x interface{}) p.Parsec {
+func CmpNumber(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		pos := st.Pos()
 		cmp, err := CmpInt(x)(st)
@@ -385,7 +385,7 @@ func CmpNumber(x interface{}) p.Parsec {
 }
 
 // CmpString 实现两个字符串的三向比较
-func CmpString(x interface{}) p.Parsec {
+func CmpString(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := StringValue(st)
 		if err == nil {
@@ -397,7 +397,7 @@ func CmpString(x interface{}) p.Parsec {
 }
 
 // CmpTime 实现两个Time的三向比较
-func CmpTime(x interface{}) p.Parsec {
+func CmpTime(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err == nil {
@@ -413,8 +413,8 @@ func compare(st p.State) (interface{}, error) {
 		p.Try(IntValue).Bind(LessThanNumber),
 		p.Try(NumberValue).Bind(LessThanFloat),
 		p.Try(StringValue).Bind(LessThanString),
-		p.M(TimeValue).Bind(LessThanTime),
-	).Bind(func(l interface{}) p.Parsec {
+		p.P(TimeValue).Bind(LessThanTime),
+	).Bind(func(l interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			_, err := p.EOF(st)
 			if err != nil {
@@ -430,9 +430,9 @@ func compare(st p.State) (interface{}, error) {
 }
 
 func equals(st p.State) (interface{}, error) {
-	return p.M(p.One).Bind(eqs)(st)
+	return p.P(p.One).Bind(eqs)(st)
 }
-func eqs(x interface{}) p.Parsec {
+func eqs(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := st.Next()
 		if err != nil {
@@ -449,10 +449,10 @@ func eqs(x interface{}) p.Parsec {
 }
 
 func equalsOption(st p.State) (interface{}, error) {
-	return p.M(p.One).Bind(eqsOption)(st)
+	return p.P(p.One).Bind(eqsOption)(st)
 }
 
-func eqsOption(x interface{}) p.Parsec {
+func eqsOption(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := st.Next()
 		if err != nil {
@@ -472,10 +472,10 @@ func eqsOption(x interface{}) p.Parsec {
 }
 
 func notEquals(st p.State) (interface{}, error) {
-	return p.M(p.One).Bind(neqs)(st)
+	return p.P(p.One).Bind(neqs)(st)
 }
 
-func neqs(x interface{}) p.Parsec {
+func neqs(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := st.Next()
 		if err != nil {
@@ -521,7 +521,7 @@ func neqsOption(st p.State) (interface{}, error) {
 }
 
 // String2Values 将两个 StringValue 串为 List
-var String2Values = p.M(StringValue).Bind(func(x interface{}) p.Parsec {
+var String2Values = p.P(StringValue).Bind(func(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := StringValue(st)
 		if err != nil {
@@ -532,7 +532,7 @@ var String2Values = p.M(StringValue).Bind(func(x interface{}) p.Parsec {
 })
 
 //TimeValue 将两个 Time 值串为 List
-var Time2Values = p.M(TimeValue).Bind(func(x interface{}) p.Parsec {
+var Time2Values = p.P(TimeValue).Bind(func(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := TimeValue(st)
 		if err != nil {
@@ -543,7 +543,7 @@ var Time2Values = p.M(TimeValue).Bind(func(x interface{}) p.Parsec {
 })
 
 //ListValue 将两个 Time 值串为 List
-var List2Values = p.M(ListValue).Bind(func(x interface{}) p.Parsec {
+var List2Values = p.P(ListValue).Bind(func(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		y, err := ListValue(st)
 		if err != nil {

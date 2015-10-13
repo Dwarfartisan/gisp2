@@ -43,7 +43,7 @@ func TestIntParser2(t *testing.T) {
 func TestIntParser3(t *testing.T) {
 	data := "3.14"
 	st := p.BasicStateFromText(data)
-	o, err := p.M(IntParser).Then(p.EOF)(&st)
+	o, err := p.P(IntParser).Then(p.EOF)(&st)
 	if err == nil {
 		t.Fatalf("expect a Float parse error but got %v", o)
 	}

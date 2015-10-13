@@ -10,7 +10,7 @@ import (
 type Bool bool
 
 // BoolParser 解析 bool
-var BoolParser = p.Choice(p.Str("true"), p.Str("false")).Bind(func(input interface{}) p.Parsec {
+var BoolParser = p.Choice(p.Str("true"), p.Str("false")).Bind(func(input interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
 		switch input.(string) {
 		case "true":

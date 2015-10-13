@@ -17,7 +17,7 @@ type Functor interface {
 type ArgsSignChecker func(args ...interface{}) error
 
 // SignChecker 定义 Parsex 环境下的函数签名验证器
-func SignChecker(parser p.Parsec) ArgsSignChecker {
+func SignChecker(parser p.P) ArgsSignChecker {
 	return func(args ...interface{}) error {
 		st := p.NewBasicState(args)
 		_, err := parser(&st)

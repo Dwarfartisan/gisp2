@@ -184,14 +184,14 @@ func IntVal(st px.ParsexState) (interface{}, error) {
 }
 
 // BracketParser 尝试将 state 中下一个值解析为中括号表达式
-func BracketParser() p.Parsec {
+func BracketParser() p.P {
 	return p.Between(p.Chr('['), p.Chr(']'),
 		p.SepBy1(ValueParser(), p.Chr(':')),
 	)
 }
 
 // BracketParserExt 在带有 Ext 的环境下解析中括号表达式
-func BracketParserExt(env Env) p.Parsec {
+func BracketParserExt(env Env) p.P {
 	return p.Between(p.Chr('['), p.Chr(']'),
 		p.SepBy1(ValueParserExt(env), p.Chr(':')),
 	)
@@ -211,7 +211,7 @@ func (be BracketExpr) Task(env Env, args ...interface{}) (Lisp, error) {
 }
 
 // BracketExprParserExt 返回带 Ext 环境的 BracketExpr 。
-func BracketExprParserExt(env Env) p.Parsec {
+func BracketExprParserExt(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		expr, err := BracketParserExt(env)(st)
 		if err != nil {

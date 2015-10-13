@@ -169,7 +169,7 @@ var Parsec = Toolkit{
 
 		},
 		"either": func(env Env, args ...interface{}) (Lisp, error) {
-			ptype := reflect.TypeOf((p.Parsec)(nil))
+			ptype := reflect.TypeOf((p.P)(nil))
 			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
@@ -177,12 +177,12 @@ var Parsec = Toolkit{
 			return ParsecBox(p.Choice(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
 		},
 		"choice": func(env Env, args ...interface{}) (Lisp, error) {
-			ptype := reflect.TypeOf((p.Parsec)(nil))
+			ptype := reflect.TypeOf((p.P)(nil))
 			params, err := GetArgs(env, p.ManyTil(TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
-			parsers := make([]p.Parsec, len(params))
+			parsers := make([]p.P, len(params))
 			for idx, prs := range params {
 				if parser, ok := prs.(Parsecer); ok {
 					parsers[idx] = parser.Parser
@@ -312,10 +312,10 @@ var Parsec = Toolkit{
 				return nil, err
 			}
 			switch fun := f.(type) {
-			case func(interface{}) p.Parsec:
+			case func(interface{}) p.P:
 				return ParsecBox(parser.Parser.Bind(fun)), nil
 			case Functor:
-				return ParsecBox(parser.Parser.Bind(func(x interface{}) p.Parsec {
+				return ParsecBox(parser.Parser.Bind(func(x interface{}) p.P {
 					tasker, err := fun.Task(env, x)
 					if err != nil {
 						return func(st p.State) (interface{}, error) {
@@ -329,7 +329,7 @@ var Parsec = Toolkit{
 						}
 					}
 					switch parser := pr.(type) {
-					case p.Parsec:
+					case p.P:
 						return parser
 					case Parsecer:
 						return parser.Parser
@@ -420,7 +420,7 @@ func NewStringState(data string) p.State {
 
 // Parsecer 实现一个 parsex 封装
 type Parsecer struct {
-	Parser p.Parsec
+	Parser p.P
 }
 
 // Task 定义了 parsex 的求值
@@ -450,13 +450,13 @@ func (parser Parsecer) Eval(env Env) (interface{}, error) {
 }
 
 // ParsecBox 定义了一个 Parsecer 的封装
-func ParsecBox(parser p.Parsec) Lisp {
+func ParsecBox(parser p.P) Lisp {
 	return Parsecer{parser}
 }
 
 // ParsecTask 定义了延迟执行 Parsex 的行为
 type ParsecTask struct {
-	Parser p.Parsec
+	Parser p.P
 	State  p.State
 }
 

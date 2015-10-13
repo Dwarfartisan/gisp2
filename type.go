@@ -40,18 +40,18 @@ func stop(st p.State) (interface{}, error) {
 	return r, nil
 }
 
-func stopWord(x interface{}) p.Parsec {
-	return p.M(stop).Then(p.Return(x))
+func stopWord(x interface{}) p.P {
+	return p.P(stop).Then(p.Return(x))
 }
 
-func typeName(word string) p.Parsec {
+func typeName(word string) p.P {
 	return p.Str(word).Bind(stopWord)
 }
 
 var anyType = p.Many1(p.Choice(p.Try(p.Digit), p.Letter)).Bind(stopWord).Bind(p.ReturnString)
 
 // SliceTypeParserExt 定义了带环境的序列类型解析逻辑
-func SliceTypeParserExt(env Env) p.Parsec {
+func SliceTypeParserExt(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		t, err := p.Str("[]").Then(ExtTypeParser(env))(st)
 		if err != nil {
@@ -62,7 +62,7 @@ func SliceTypeParserExt(env Env) p.Parsec {
 }
 
 // MapTypeParserExt  定义了带环境的映射类型解析逻辑
-func MapTypeParserExt(env Env) p.Parsec {
+func MapTypeParserExt(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		key, err := p.Between(p.Str("map["), p.Chr(']'), ExtTypeParser(env))(st)
 		if err != nil {
@@ -90,7 +90,7 @@ func MapTypeParser(st p.State) (interface{}, error) {
 }
 
 // ExtTypeParser 定义了带环境的类型解释器
-func ExtTypeParser(env Env) p.Parsec {
+func ExtTypeParser(env Env) p.P {
 	return func(st p.State) (interface{}, error) {
 		_, err := p.Str("::")(st)
 		if err != nil {

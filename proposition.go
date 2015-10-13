@@ -41,7 +41,7 @@ var Propositions = Toolkit{
 }
 
 // ParsecExpr 是 parsec 算子的解析表达式
-func ParsecExpr(pxExpr p.Parsec) LispExpr {
+func ParsecExpr(pxExpr p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		data, err := Evals(env, args...)
 		if err != nil {
@@ -57,7 +57,7 @@ func ParsecExpr(pxExpr p.Parsec) LispExpr {
 }
 
 // ExtExpr 带扩展环境
-func ExtExpr(extExpr func(env Env) p.Parsec) LispExpr {
+func ExtExpr(extExpr func(env Env) p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		data, err := Evals(env, args...)
 		if err != nil {
@@ -73,7 +73,7 @@ func ExtExpr(extExpr func(env Env) p.Parsec) LispExpr {
 }
 
 // NotParsec 是 not 运算符
-func NotParsec(pxExpr p.Parsec) p.Parsec {
+func NotParsec(pxExpr p.P) p.P {
 	return func(st p.State) (interface{}, error) {
 		b, err := pxExpr(st)
 		if err != nil {
@@ -87,7 +87,7 @@ func NotParsec(pxExpr p.Parsec) p.Parsec {
 }
 
 // ParsecReverseExpr 是倒排运算
-func ParsecReverseExpr(pxExpr p.Parsec) LispExpr {
+func ParsecReverseExpr(pxExpr p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		data, err := Evals(env, args...)
 		if err != nil {
@@ -128,7 +128,7 @@ func NotExpr(expr LispExpr) LispExpr {
 }
 
 // OrExpr 是  or 表达式
-func OrExpr(x, y p.Parsec) LispExpr {
+func OrExpr(x, y p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		data, err := Evals(env, args...)
 		if err != nil {
@@ -157,21 +157,21 @@ func OrExpr(x, y p.Parsec) LispExpr {
 }
 
 // OrExtExpr 定了带环境扩展的 or 表达式
-func OrExtExpr(x, y func(Env) p.Parsec) LispExpr {
+func OrExtExpr(x, y func(Env) p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		return OrExpr(x(env), y(env))(env, args...)
 	}
 }
 
 // OrExtRExpr 定了带环境扩展的 or 逆向表达式
-func OrExtRExpr(x p.Parsec, y func(Env) p.Parsec) LispExpr {
+func OrExtRExpr(x p.P, y func(Env) p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		return OrExpr(x, y(env))(env, args...)
 	}
 }
 
 // ExtReverseExpr 定了带环境扩展的倒排表达式
-func ExtReverseExpr(expr func(Env) p.Parsec) LispExpr {
+func ExtReverseExpr(expr func(Env) p.P) LispExpr {
 	return func(env Env, args ...interface{}) (Lisp, error) {
 		return ParsecReverseExpr(expr(env))(env, args...)
 	}

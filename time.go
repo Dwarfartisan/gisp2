@@ -21,14 +21,14 @@ var Time = Toolkit{
 				}
 			}},
 		"parseDuration": SimpleBox{
-			SignChecker(p.M(StringValue).Then(p.EOF)),
+			SignChecker(p.P(StringValue).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					return tm.ParseDuration(args[0].(string))
 				}
 			}},
 		"parseTime": SimpleBox{
-			SignChecker(p.M(StringValue).Then(StringValue).Then(p.EOF)),
+			SignChecker(p.P(StringValue).Then(StringValue).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {
 					return tm.Parse(args[0].(string), args[1].(string))

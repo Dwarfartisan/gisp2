@@ -37,7 +37,7 @@ func (atom Atom) Eval(env Env) (interface{}, error) {
 	return nil, fmt.Errorf("value of atom %s not found", atom.Name)
 }
 
-func atomNameParser() p.Parsec {
+func atomNameParser() p.P {
 	return p.Do(func(state p.State) interface{} {
 		ret := p.Many1(p.RuneNone("'[]() \t\r\n\".:")).Bind(p.ReturnString).Exec(state)
 		test := p.BasicStateFromText(ret.(string))
@@ -50,7 +50,7 @@ func atomNameParser() p.Parsec {
 }
 
 // AtomParserExt 生成带扩展包的 Atom
-func AtomParserExt(env Env) p.Parsec {
+func AtomParserExt(env Env) p.P {
 	return p.Do(func(st p.State) interface{} {
 		a := atomNameParser().Exec(st)
 		t, err := p.Try(ExtTypeParser(env)).Parse(st)

@@ -26,7 +26,7 @@ func typeis(x Atom) func(int, interface{}) (interface{}, error) {
 }
 
 // TypeAs 函数根据反射对 Gisp 数据进行类型判断
-func TypeAs(typ reflect.Type) p.Parsec {
+func TypeAs(typ reflect.Type) p.P {
 	return func(st p.State) (interface{}, error) {
 		obj, err := st.Next()
 		if err != nil {
@@ -43,7 +43,7 @@ func TypeAs(typ reflect.Type) p.Parsec {
 
 // argParser 构造一个 parsec 解析器，判断输入数据是否与给定类型一致，如果判断成功，构造对应的
 // Var。
-func argParser(atom Atom) p.Parsec {
+func argParser(atom Atom) p.P {
 	one := func(st p.State) (interface{}, error) {
 		var err error
 		if data, err := st.Next(); err == nil {
@@ -62,8 +62,8 @@ func argParser(atom Atom) p.Parsec {
 }
 
 // argRing 组成参数解析链的的后续逻辑，供 parsex.Binds 调用
-func argRing(atom Atom) func(interface{}) p.Parsec {
-	return func(x interface{}) p.Parsec {
+func argRing(atom Atom) func(interface{}) p.P {
+	return func(x interface{}) p.P {
 		return func(st p.State) (interface{}, error) {
 			ring, err := argParser(atom)(st)
 			if err == nil {
@@ -75,7 +75,7 @@ func argRing(atom Atom) func(interface{}) p.Parsec {
 }
 
 // GetArgs 方法为将传入的 args 的 gisp 值从指定环境中解析出来，然后传入 parser 。
-func GetArgs(env Env, parser p.Parsec, args []interface{}) ([]interface{}, error) {
+func GetArgs(env Env, parser p.P, args []interface{}) ([]interface{}, error) {
 	ret, err := Evals(env, args...)
 	if err != nil {
 		return nil, err

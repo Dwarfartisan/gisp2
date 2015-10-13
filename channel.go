@@ -68,7 +68,7 @@ var channel = Toolkit{
 	},
 	Content: map[string]interface{}{
 		"chan": SimpleBox{
-			SignChecker(p.M(TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem())).
+			SignChecker(p.P(TypeAs(reflect.TypeOf((*reflect.Type)(nil)).Elem())).
 				Then(TypeAs(INT)).Then(p.EOF)),
 			func(args ...interface{}) Tasker {
 				return func(env Env) (interface{}, error) {

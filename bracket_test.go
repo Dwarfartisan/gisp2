@@ -10,7 +10,7 @@ import (
 func TestBracketParser(t *testing.T) {
 	data := "dict[\"meta\"]"
 	st := p.BasicStateFromText(data)
-	re, err := p.M(AtomParser).Bind(BracketSuffixParser)(&st)
+	re, err := p.P(AtomParser).Bind(BracketSuffixParser)(&st)
 	if err != nil {
 		t.Fatalf("expect a Dot but error %v", err)
 	}
