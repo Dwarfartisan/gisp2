@@ -135,6 +135,7 @@ func OrExpr(x, y p.P) LispExpr {
 			return nil, err
 		}
 		st := p.NewBasicState(data)
+		zero := st.Begin() // zero 记录的是 pos 还处于 0 点时申请到的事务号
 		rex, err := x(&st)
 		if err != nil {
 			fmt.Println("Trace x parsec")
@@ -144,7 +145,7 @@ func OrExpr(x, y p.P) LispExpr {
 			if b {
 				return Q(true), nil
 			}
-			st.SeekTo(0)
+			st.Rollback(zero)
 			rex, err = y(&st)
 			if err != nil {
 				fmt.Println("Trace y parsec")

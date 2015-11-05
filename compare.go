@@ -166,12 +166,13 @@ func LessThanFloat(x interface{}) p.P {
 // LessThanNumber 实现数值的比较
 func LessThanNumber(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
-		pos := st.Pos()
+		tran := st.Pos()
 		cmp, err := LessThanInt(x)(st)
 		if err == nil {
+			st.Commit(tran)
 			return cmp, nil
 		}
-		st.SeekTo(pos)
+		st.Rollback(tran)
 		return LessThanFloat(x)(st)
 	}
 }
@@ -374,12 +375,13 @@ func CmpFloat(x interface{}) p.P {
 // CmpNumber 实现两个数值的三向比较
 func CmpNumber(x interface{}) p.P {
 	return func(st p.State) (interface{}, error) {
-		pos := st.Pos()
+		tran := st.Begin()
 		cmp, err := CmpInt(x)(st)
 		if err == nil {
+			st.Commit(tran)
 			return cmp, nil
 		}
-		st.SeekTo(pos)
+		st.Rollback(tran)
 		return CmpFloat(x)(st)
 	}
 }

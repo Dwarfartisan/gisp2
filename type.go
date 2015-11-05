@@ -26,8 +26,8 @@ func (typ Type) Option() bool {
 }
 
 func stop(st p.State) (interface{}, error) {
-	pos := st.Pos()
-	defer st.SeekTo(pos)
+	tran := st.Begin()
+	defer st.Rollback(tran)
 	r, err := p.Choice(
 		p.Try(p.Space),
 		p.Try(p.Newline),
