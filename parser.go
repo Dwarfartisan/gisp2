@@ -14,11 +14,11 @@ type Gisp struct {
 }
 
 // NewGisp 给定若干可以组合的基准环境，用于构造环境
-func NewGisp(buildins map[string]Toolbox) *Gisp {
+func NewGisp(builtins map[string]Toolbox) *Gisp {
 	ret := Gisp{
 		Meta: map[string]interface{}{
 			"category": "gisp",
-			"buildins": buildins,
+			"builtins": builtins,
 		},
 		Content: map[string]interface{}{},
 	}
@@ -26,8 +26,8 @@ func NewGisp(buildins map[string]Toolbox) *Gisp {
 }
 
 // NewGispWith 允许用户在构造 gisp 环境时指定使用的包
-func NewGispWith(buildins map[string]Toolbox, ext map[string]Toolbox) *Gisp {
-	gisp := NewGisp(buildins)
+func NewGispWith(builtins map[string]Toolbox, ext map[string]Toolbox) *Gisp {
+	gisp := NewGisp(builtins)
 	if ext == nil {
 		return gisp
 	}
@@ -118,10 +118,10 @@ func (gisp Gisp) Lookup(name string) (interface{}, bool) {
 	return gisp.Global(name)
 }
 
-// Global look up in buildins
+// Global look up in builtins
 func (gisp Gisp) Global(name string) (interface{}, bool) {
-	buildins := gisp.Meta["buildins"].(map[string]Toolbox)
-	for _, env := range buildins {
+	builtins := gisp.Meta["builtins"].(map[string]Toolbox)
+	for _, env := range builtins {
 		if v, ok := env.Lookup(name); ok {
 			return v, true
 		}

@@ -96,7 +96,7 @@ func ExtTypeParser(env Env) p.P {
 		if err != nil {
 			return nil, err
 		}
-		buildin := p.Choice(
+		builtin := p.Choice(
 			p.Try(typeName("bool").Then(p.Return(BOOL))),
 			p.Try(typeName("float").Then(p.Return(FLOAT))),
 			p.Try(typeName("int").Then(p.Return(INT))),
@@ -124,7 +124,7 @@ func ExtTypeParser(env Env) p.P {
 			}
 			return nil, st.Trap("var %v is't a type. It is %v", n, reflect.TypeOf(t))
 		}
-		t, err := p.Choice(buildin, ext)(st)
+		t, err := p.Choice(builtin, ext)(st)
 		if err != nil {
 			return nil, err
 		}
