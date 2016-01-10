@@ -178,7 +178,7 @@ var Parsec = Toolkit{
 		},
 		"choice": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((p.P)(nil))
-			params, err := GetArgs(env, p.ManyTil(TypeAs(ptype), p.EOF), args)
+			params, err := GetArgs(env, p.Many(TypeAs(ptype)).Over(p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
@@ -367,13 +367,13 @@ var Parsec = Toolkit{
 			}
 			return ParsecBox(p.SepBy(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
 		},
-		"manytil": func(env Env, args ...interface{}) (Lisp, error) {
+		"manytill": func(env Env, args ...interface{}) (Lisp, error) {
 			ptype := reflect.TypeOf((*Parsecer)(nil)).Elem()
 			params, err := GetArgs(env, p.UnionAll(TypeAs(ptype), TypeAs(ptype), p.EOF), args)
 			if err != nil {
 				return nil, err
 			}
-			return ParsecBox(p.ManyTil(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
+			return ParsecBox(p.ManyTill(params[0].(Parsecer).Parser, params[1].(Parsecer).Parser)), nil
 		},
 		"maybe": func(env Env, args ...interface{}) (Lisp, error) {
 			if len(args) != 1 {

@@ -145,7 +145,7 @@ func xEOF(x interface{}) p.P {
 // addx 实现一个parsex累加解析器，精度向上适配。我一直觉得应该有一个简单的高效版本，不需要回溯的
 // 但是目前还没有找到。
 func addx(st p.State) (interface{}, error) {
-	ints, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
+	ints, err := p.Try(p.Many(IntValue).Over(p.EOF))(st)
 	if err == nil {
 		root := Int(0)
 		for _, x := range ints.([]interface{}) {
@@ -153,7 +153,7 @@ func addx(st p.State) (interface{}, error) {
 		}
 		return root, nil
 	}
-	numbers, err := p.ManyTil(NumberValue, p.EOF)(st)
+	numbers, err := p.Many(NumberValue).Over(p.EOF)(st)
 	if err == nil {
 		root := Float(0)
 		for _, x := range numbers.([]interface{}) {
@@ -186,7 +186,7 @@ func addFloats(floats ...interface{}) (interface{}, error) {
 
 // subx 实现一个左折叠的 parsex 连减解析器，精度向上适配。
 func subx(st p.State) (interface{}, error) {
-	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
+	data, err := p.Try(p.Many(IntValue).Over(p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -195,7 +195,7 @@ func subx(st p.State) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = p.ManyTil(NumberValue, p.EOF)(st)
+	data, err = p.Many(NumberValue).Over(p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)
@@ -213,7 +213,7 @@ func subx(st p.State) (interface{}, error) {
 
 // mulx 实现一个 parsec 累乘解析器，精度向上适配。
 func mulx(st p.State) (interface{}, error) {
-	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
+	data, err := p.Try(p.Many(IntValue).Over(p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -222,7 +222,7 @@ func mulx(st p.State) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = p.ManyTil(NumberValue, p.EOF)(st)
+	data, err = p.Many(NumberValue).Over(p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)
@@ -239,7 +239,7 @@ func mulx(st p.State) (interface{}, error) {
 
 // divx 实现一个左折叠的 parsec 连除解析器，精度向上适配。
 func divx(st p.State) (interface{}, error) {
-	data, err := p.Try(p.ManyTil(IntValue, p.EOF))(st)
+	data, err := p.Try(p.Many(IntValue).Over(p.EOF))(st)
 	if err == nil {
 		ints := data.([]interface{})
 		root := ints[0].(Int)
@@ -248,7 +248,7 @@ func divx(st p.State) (interface{}, error) {
 		}
 		return root, nil
 	}
-	data, err = p.ManyTil(NumberValue, p.EOF)(st)
+	data, err = p.Many(NumberValue).Over(p.EOF)(st)
 	if err == nil {
 		numbers := data.([]interface{})
 		root := numbers[0].(Float)
