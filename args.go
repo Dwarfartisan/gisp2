@@ -36,7 +36,7 @@ func TypeAs(typ reflect.Type) p.P {
 		if otype == typ {
 			return obj, nil
 		}
-		return nil, fmt.Errorf("Args Type Sign Check: excpet %v but %v is",
+		return nil, fmt.Errorf("Args Type Sign Check: excpet %v but %v is %v",
 			typ, obj, otype)
 	}
 }

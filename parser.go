@@ -69,7 +69,7 @@ func (gisp *Gisp) Defun(name string, functor Functor) error {
 		case Func:
 			slot.Overload(functor)
 		case Var:
-			return fmt.Errorf("%s defined as a var")
+			return fmt.Errorf("%s defined as a var", name)
 		default:
 			return fmt.Errorf("exists name %s isn't Expr", name)
 		}

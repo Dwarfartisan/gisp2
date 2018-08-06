@@ -57,7 +57,7 @@ var Axiom = Toolkit{
 		}),
 		"equal": TaskExpr(func(env Env, args ...interface{}) (Tasker, error) {
 			if len(args) != 2 {
-				return nil, fmt.Errorf("args error: equal need two args but only",
+				return nil, fmt.Errorf("args error: equal need two args but %v only",
 					args)
 			}
 			return func(env Env) (interface{}, error) {
